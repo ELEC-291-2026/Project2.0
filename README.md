@@ -278,18 +278,6 @@ These features go beyond the base requirements and are what push a demo score fr
 
 **Why it's worth it:** Adds genuine autonomous functionality. Directly addresses the "additional functionality" criterion in the marking rubric.
 
----
-
-### OLED Display on Remote
-**What it does:** Replaces the standard LCD with a crisp graphical OLED — display coin count, battery level, signal strength, robot mode, and simple graphics all at once.
-
-**Hardware:** SSD1306 0.96" I2C OLED (~$5 on Amazon). 4 pins (VCC, GND, SDA, SCL), plugs straight into breadboard. **Buy the 4-pin I2C version specifically.**
-
-**Software:** I2C interface with SSD1306 library. Initialize in 2–3 lines of code. Draw text, rectangles, lines, and bitmap icons with simple function calls. Far simpler than the 6-pin parallel LCD interface.
-
-**Difficulty:** 1/5 | **Time:** 1–2 hours
-
-**Why it's worth it:** Looks dramatically more professional than the LCD for almost zero effort. For a team that has driven a VGA display in C, this is trivial.
 
 ---
 
@@ -300,17 +288,6 @@ These features go beyond the base requirements and are what push a demo score fr
 
 **Software:** Flash the pre-built CameraWebServer firmware — built into Arduino IDE under File → Examples → ESP32 → Camera → CameraWebServer. Change two lines (WiFi SSID and password). Flash it. Done. No custom code required.
 
-**Setup steps:**
-1. Install Arduino IDE and add ESP32 board support
-2. Open CameraWebServer example
-3. Set your phone hotspot SSID and password
-4. Hold IO0 pin to GND while powering on to enter flash mode
-5. Flash firmware, open serial monitor to get the IP address
-6. Anyone on the same hotspot opens that IP in a browser — live video
-
-**Difficulty:** 1/5 | **Time:** 2–3 hours (mostly first-time Arduino IDE setup)
-
-**Why it's worth it:** Completely standalone — doesn't touch your main microcontroller code at all. Best effort-to-impressiveness ratio of any bonus feature on this list. Watching the robot's POV on your phone during a live demo is genuinely memorable.
 
 ---
 
@@ -321,9 +298,6 @@ These features go beyond the base requirements and are what push a demo score fr
 
 **Software:** D1 Mini runs a lightweight web server. Robot microcontroller sends telemetry packets over UART to the D1 Mini, which formats and serves them as a live-updating webpage. HTML/CSS/JavaScript for the dashboard frontend.
 
-**Difficulty:** 3/5 | **Time:** 5–6 hours
-
-**Why it's worth it:** Shows genuine systems integration thinking beyond the base requirements. A live updating dashboard with real sensor data is the kind of feature that earns the "exceptional" descriptor on the marking rubric.
 
 ---
 
@@ -334,51 +308,7 @@ These features go beyond the base requirements and are what push a demo score fr
 
 **Software:** Maintain a simple 2D grid array representing the playing field. Update estimated position based on motor direction and timing. Mark grid cells where coins are detected. Bias autonomous navigation toward unvisited or previously productive cells.
 
-**Difficulty:** 3/5 | **Time:** 4–5 hours
 
-**Why it's worth it:** Demonstrates actual intelligent behavior beyond simple random search. Visually explainable during the demo — "it already picked that area clean so it's moving over here."
-
----
-
-### Live Minimap on OLED
-**What it does:** The OLED on the remote shows a live top-down minimap of the playing field with a dot representing the robot's current estimated position, updating in real time as it moves.
-
-**Hardware:** OLED display (same as above). Robot sends position estimates to remote via JDY-40.
-
-**Software:** Dead reckoning on robot side — track X/Y position from motor commands and timing. Transmit coordinates to remote over JDY-40. Remote renders position as a pixel on the OLED display — essentially a small framebuffer problem.
-
-**Difficulty:** 3/5 | **Time:** 4–5 hours
-
-**Why it's worth it:** For a team with VGA display experience, this is a natural extension of skills you already have. Dead reckoning + wireless telemetry + real-time graphical rendering is a compelling technical combination that stands out.
-
----
-
-### Smartphone Control via Bluetooth (HC-05)
-**What it does:** Control the robot directly from a phone via Bluetooth, either as a replacement for or alongside the JDY-40 joystick remote.
-
-**Hardware:** HC-05 Bluetooth module (~$5 on Amazon). Comes on a breakout board with 2.54mm headers, plugs straight into breadboard. Standard UART interface — identical to how the JDY-40 is wired.
-
-**Software:** Pair phone to HC-05. Use a free Bluetooth terminal app to send command bytes. Robot decodes them identically to JDY-40 commands — almost no new robot-side code required.
-
-**Difficulty:** 2/5 | **Time:** 3–4 hours
-
-**Why it's worth it:** Controlling the robot from a phone during the demo impresses observers immediately. Can run alongside the existing JDY-40 remote as a secondary control interface with minimal additional work.
-
----
-
-### Bonus Features Shopping List
-| Item | Price | Notes |
-|------|-------|-------|
-| HC-SR04 ultrasonic sensor | ~$4 | Amazon — obstacle avoidance |
-| SSD1306 0.96" I2C OLED (4-pin) | ~$5 | Amazon — graphical remote display |
-| ESP32-CAM + programmer board | ~$10 | Amazon — FPV camera stream |
-| Wemos D1 Mini ESP8266 | ~$5 | Amazon — web dashboard |
-| HC-05 Bluetooth module | ~$5 | Amazon — smartphone control |
-| **Total** | **~$29** | ~$5 per person split across 6 |
-
-Order early — even with Prime, budget a few days for delivery.
-
----
 
 *README last updated: March 2026*  
 *ELEC291 Project 2 — Coin Picking Robot — UBC ECE*
