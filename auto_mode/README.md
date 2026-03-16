@@ -1,39 +1,55 @@
 # Auto Mode Starter
 
-This folder contains a minimal starting point for the robot's autonomous mode.
+This folder contains a minimal starting point for the robot's autonomous mode
+based on the project slides.
 
-The design is intentionally small:
+The software assumes:
 
-- `robot_auto_mode.c` contains a simple follow-the-wire state machine.
-- `robot_auto_mode.h` exposes the data types and entry points.
+- two field detectors are used for left/right tracking
+- one field detector is used for intersection detection
+- all three detector outputs go to ADC inputs
+- each motor is controlled through an H-bridge
 
-The initial goal is not to solve the whole project at once. It is to:
+The initial goal is to:
 
-1. Read the left and right field sensors.
+1. Read the three detector voltages through the ADC.
 2. Keep the robot centered over the guide wire.
-3. Stop safely when the signal is lost.
-
-After this works on the bench, the next layers are:
-
-1. Add intersection detection using a third sensor.
-2. Add pre-configured paths.
-3. Add VL53L0X obstacle detection.
-4. Add remote control integration.
+3. Detect intersections.
+4. Choose the next action from the selected path and the number of times an intersection has been met.
+5. Leave a clean place to plug in obstacle handling.
 
 Suggested module split for the full firmware:
 
 - `board.c`: clocks, GPIO, timer, ADC, I2C init
-- `motor.c`: H-bridge direction and PWM control
-- `field_sensor.c`: ADC reads and filtering
+- `hbridge_motor.c`: signed motor command to GPIO/PWM mapping
+- `field_sensor.c`: ADC reads and filtering for left/right/intersection
 - `robot_auto_mode.c`: state machine and steering logic
-- `intersection.c`: third-sensor intersection detection
-- `path_manager.c`: stored route steps
+- `path_manager.c`: path selection and intersection-count lookup
 - `vl53l0x.c`: obstacle sensing
 - `ir_rx.c`: remote command handling
 
 Recommended control-loop flow:
 
 1. Update field sensors.
-2. Check safety conditions.
-3. Run one state-machine step.
-4. Update motor outputs.
+2. Check for obstacle or signal-loss conditions.
+3. Detect whether a new intersection has started.
+4. Run one state-machine step.
+5. Apply signed motor outputs to the H-bridges.
+
+Current starter states:
+
+- `ROBOT_AUTO_FOLLOW`
+- `ROBOT_AUTO_INTERSECTION`
+- `ROBOT_AUTO_STOP`
+- `ROBOT_AUTO_LOST`
+
+Current starter abstractions:
+
+- `field_sensor_update(...)` takes three ADC samples
+- `hbridge_motor_apply(...)` is the motor integration point
+- `path_context_t` tracks the selected path and how many intersections have been crossed
+
+Important behavior:
+
+- The path action is chosen when a new intersection starts.
+- The code does not count the same intersection multiple times while the robot is still physically over it.
