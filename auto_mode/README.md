@@ -21,6 +21,8 @@ The initial goal is to:
 Suggested module split for the full firmware:
 
 - `board.c`: clocks, GPIO, timer, ADC, I2C init
+- `field_sensor_adc_config.h`: editable ADC pin and channel mapping
+- `field_sensor_adc.c`: STM32 HAL ADC reads for the 3 field sensors
 - `hbridge_motor.c`: signed motor command to GPIO/PWM mapping
 - `field_sensor.c`: ADC reads and filtering for left/right/intersection
 - `robot_auto_mode.c`: state machine and steering logic
@@ -45,7 +47,9 @@ Current starter states:
 
 Current starter abstractions:
 
-- `field_sensor_update(...)` takes three ADC samples
+- `field_sensor_adc_config.h` is where you change ADC pins and channels
+- `field_sensor_adc_update(...)` reads the 3 ADC channels and updates filtering
+- `field_sensor_update(...)` applies filtering to three samples
 - `hbridge_motor_apply(...)` is the motor integration point
 - `path_context_t` tracks the selected path and how many intersections have been crossed
 
@@ -53,3 +57,4 @@ Important behavior:
 
 - The path action is chosen when a new intersection starts.
 - The code does not count the same intersection multiple times while the robot is still physically over it.
+- `field_sensor_adc.c` uses placeholder STM32 HAL constants and may need small family-specific tweaks before it compiles in your real project.
