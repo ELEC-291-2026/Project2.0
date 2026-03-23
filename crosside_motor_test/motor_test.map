@@ -1,0 +1,221 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 main.o
+ .data          0x00000000        0x0 main.o
+ .bss           0x00000000        0x0 main.o
+ .text          0x00000000        0x0 startup.o
+ .data          0x00000000        0x0 startup.o
+ .bss           0x00000000        0x0 startup.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+flash            0x08000000         0x00010000
+ram              0x20000000         0x00002000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD main.o
+LOAD startup.o
+LOAD /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a
+
+.text           0x08000000      0x3e0
+ *(.vectors)
+ .vectors       0x08000000       0xb8 startup.o
+                0x08000000                Vectors
+ *(.after_vectors*)
+ .after_vectors
+                0x080000b8       0x80 startup.o
+                0x080000b8                ResetInit
+ *(.text*)
+ .text.startup.main
+                0x08000138      0x1e4 main.o
+                0x08000138                main
+ .text.Default_Handler
+                0x0800031c        0x4 startup.o
+                0x0800031c                ADC_COMP_Handler
+                0x0800031c                EXTI2_3_Handler
+                0x0800031c                TIM21_Handler
+                0x0800031c                SysTick_Handler
+                0x0800031c                I2C1_Handler
+                0x0800031c                PendSV_Handler
+                0x0800031c                NMI_Handler
+                0x0800031c                WWDG_Handler
+                0x0800031c                RTC_Handler
+                0x0800031c                EXTI4_15_Handler
+                0x0800031c                TIM2_Handler
+                0x0800031c                USART1_Handler
+                0x0800031c                DMA_CH4_5_6_7_Handler
+                0x0800031c                Default_Handler
+                0x0800031c                LPUART1_Handler
+                0x0800031c                EXTI0_1_Handler
+                0x0800031c                DMA_CH1_Handler
+                0x0800031c                SPI2_Handler
+                0x0800031c                DMA_CH2_3_Handler
+                0x0800031c                I2C2_Handler
+                0x0800031c                SVC_Handler
+                0x0800031c                LPTIM1_Handler
+                0x0800031c                USART2_Handler
+                0x0800031c                SPI1_Handler
+                0x0800031c                RCC_Handler
+                0x0800031c                PVD_Handler
+                0x0800031c                TIM22_Handler
+                0x0800031c                TIM6_Handler
+                0x0800031c                FLASH_Handler
+ .text.Hard_Fault_Handler
+                0x08000320        0x4 startup.o
+                0x08000320                Hard_Fault_Handler
+ .text.initClock
+                0x08000324       0xbc startup.o
+                0x08000324                initClock
+ *(.rodata*)
+                0x080003e0                        . = ALIGN (0x4)
+                0x080003e0                        PROVIDE (__init_array_start = .)
+ *(SORT_BY_NAME(.init_array.*))
+ *(.init_array)
+                0x080003e0                        PROVIDE (__init_array_end = .)
+                0x080003e0                        . = ALIGN (0x4)
+                0x080003e0                        _etext = .
+
+.glue_7         0x080003e0        0x0
+ .glue_7        0x080003e0        0x0 linker stubs
+
+.glue_7t        0x080003e0        0x0
+ .glue_7t       0x080003e0        0x0 linker stubs
+
+.vfp11_veneer   0x080003e0        0x0
+ .vfp11_veneer  0x080003e0        0x0 linker stubs
+
+.v4_bx          0x080003e0        0x0
+ .v4_bx         0x080003e0        0x0 linker stubs
+
+.iplt           0x080003e0        0x0
+ .iplt          0x080003e0        0x0 startup.o
+
+.rel.dyn        0x080003e0        0x0
+ .rel.iplt      0x080003e0        0x0 startup.o
+
+.data           0x20000000        0x0 load address 0x080003e0
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _data = .
+ *(.data*)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+
+.igot.plt       0x20000000        0x0 load address 0x080003e0
+ .igot.plt      0x20000000        0x0 startup.o
+
+.bss            0x20000000        0x0 load address 0x080003e0
+                0x20000000                        _bss = .
+ *(.bss*)
+ *(COMMON)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _ebss = .
+                [!provide]                        PROVIDE (end = .)
+                [!provide]                        PROVIDE (_HeapStart = .)
+                0x20002000                        PROVIDE (_StackTop = (ORIGIN (ram) + LENGTH (ram)))
+OUTPUT(motor_test.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0xaad
+ .debug_info    0x00000000      0x744 main.o
+ .debug_info    0x00000744      0x369 startup.o
+
+.debug_abbrev   0x00000000      0x307
+ .debug_abbrev  0x00000000      0x183 main.o
+ .debug_abbrev  0x00000183      0x184 startup.o
+
+.debug_loclists
+                0x00000000      0x147
+ .debug_loclists
+                0x00000000      0x10e main.o
+ .debug_loclists
+                0x0000010e       0x39 startup.o
+
+.debug_aranges  0x00000000       0x58
+ .debug_aranges
+                0x00000000       0x20 main.o
+ .debug_aranges
+                0x00000020       0x38 startup.o
+
+.debug_rnglists
+                0x00000000      0x1c5
+ .debug_rnglists
+                0x00000000      0x19e main.o
+ .debug_rnglists
+                0x0000019e       0x27 startup.o
+
+.debug_line     0x00000000      0xa05
+ .debug_line    0x00000000      0x6e4 main.o
+ .debug_line    0x000006e4      0x321 startup.o
+
+.debug_str      0x00000000      0x403
+ .debug_str     0x00000000      0x403 main.o
+                                0x359 (size before relaxing)
+ .debug_str     0x00000403        0x0 startup.o
+                                0x2ee (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 main.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045        0x0 startup.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c main.o
+ .ARM.attributes
+                0x0000002c       0x2c startup.o
+
+.debug_frame    0x00000000       0x84
+ .debug_frame   0x00000000       0x34 main.o
+ .debug_frame   0x00000034       0x50 startup.o
+
+Cross Reference Table
+
+Symbol                                            File
+ADC_COMP_Handler                                  startup.o
+DMA_CH1_Handler                                   startup.o
+DMA_CH2_3_Handler                                 startup.o
+DMA_CH4_5_6_7_Handler                             startup.o
+Default_Handler                                   startup.o
+EXTI0_1_Handler                                   startup.o
+EXTI2_3_Handler                                   startup.o
+EXTI4_15_Handler                                  startup.o
+FLASH_Handler                                     startup.o
+Hard_Fault_Handler                                startup.o
+I2C1_Handler                                      startup.o
+I2C2_Handler                                      startup.o
+LPTIM1_Handler                                    startup.o
+LPUART1_Handler                                   startup.o
+NMI_Handler                                       startup.o
+PVD_Handler                                       startup.o
+PendSV_Handler                                    startup.o
+RCC_Handler                                       startup.o
+RTC_Handler                                       startup.o
+ResetInit                                         startup.o
+SPI1_Handler                                      startup.o
+SPI2_Handler                                      startup.o
+SVC_Handler                                       startup.o
+SysTick_Handler                                   startup.o
+TIM21_Handler                                     startup.o
+TIM22_Handler                                     startup.o
+TIM2_Handler                                      startup.o
+TIM6_Handler                                      startup.o
+USART1_Handler                                    startup.o
+USART2_Handler                                    startup.o
+Vectors                                           startup.o
+WWDG_Handler                                      startup.o
+_StackTop                                         startup.o
+__init_array_end                                  startup.o
+__init_array_start                                startup.o
+_data                                             startup.o
+_ebss                                             startup.o
+_edata                                            startup.o
+_etext                                            startup.o
+initClock                                         startup.o
+main                                              main.o
+                                                  startup.o

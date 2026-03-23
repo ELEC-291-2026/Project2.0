@@ -1,0 +1,44 @@
+# CrossIDE Motor Test
+
+This folder is a bare-metal STM32L051K8 motor test for the course CrossIDE
+toolchain.  It does not use STM32 HAL or CubeMX.
+
+Pin mapping:
+
+- `PA0` (pin 6) -> `TIM2_CH1` -> left motor forward
+- `PA1` (pin 7) -> `TIM2_CH2` -> left motor reverse
+- `PA2` (pin 8) -> `TIM2_CH3` -> right motor forward
+- `PA3` (pin 9) -> `TIM2_CH4` -> right motor reverse
+
+The test sequence in `main.c` is:
+
+1. Left motor only for 3 seconds
+2. Stop for 1 second
+3. Right motor only for 3 seconds
+4. Stop for 1 second
+5. Both motors forward for 3 seconds
+6. Stop for 2 seconds
+
+Build on macOS/Linux:
+
+```sh
+cd crosside_motor_test
+make -f makefile.mac
+```
+
+Build with CrossIDE/Windows:
+
+- Open `motor_test.mk`, or run `make -f motor_test.mk`
+
+Generated output:
+
+- `motor_test.elf`
+- `motor_test.hex`
+
+Notes:
+
+- The support files in `../Common` came from the course STM32L051 bundle.
+- If a motor spins backward, swap the motor wires or change the sign in
+  `set_motor_outputs(...)`.
+- `makefile.mac` includes an optional `flash` target, but it expects a local
+  `stm32flash` tool path.

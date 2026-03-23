@@ -1,0 +1,35 @@
+TARGET=motor_test
+CC=arm-none-eabi-gcc
+OBJCOPY=arm-none-eabi-objcopy
+SIZE=arm-none-eabi-size
+
+CPUFLAGS=-mcpu=cortex-m0plus -mthumb
+CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -I../Common/Include
+LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lgcc
+
+OBJS=main.o startup.o
+
+PORTN ?= /dev/$(shell ls /dev | grep "cu.usbserial" | head -n 1)
+STM32FLASH ?= ../stm32flash/stm32flash
+
+all: $(TARGET).hex
+
+$(TARGET).elf: $(OBJS)
+	$(CC) $(OBJS) $(LDFLAGS) -o $(TARGET).elf
+	$(SIZE) $(TARGET).elf
+
+$(TARGET).hex: $(TARGET).elf
+	$(OBJCOPY) -O ihex $(TARGET).elf $(TARGET).hex
+	@echo Success!
+
+main.o: main.c
+	$(CC) -c $(CFLAGS) main.c -o main.o
+
+startup.o: ../Common/Source/startup.c
+	$(CC) -c $(CFLAGS) ../Common/Source/startup.c -o startup.o
+
+clean:
+	rm -f $(OBJS) $(TARGET).elf $(TARGET).hex $(TARGET).map
+
+flash: $(TARGET).hex
+	$(STM32FLASH) -w $(TARGET).hex -v -g 0x0 $(PORTN)
