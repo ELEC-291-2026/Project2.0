@@ -32,6 +32,7 @@ clean:
 	@del $(TARGET).elf $(TARGET).hex $(TARGET).map 2>NUL
 
 Flash_Load: $(TARGET).hex
-	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL
-	@.\stm32flash\BO230\BO230.exe -b > NUL
-	@for /f %P in (.\stm32flash\BO230\COMPORT.inc) do .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 %P
+	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL 2>NUL
+	@echo .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 ^^>loadf.bat
+	@.\stm32flash\BO230\BO230.exe -b >>loadf.bat
+	@loadf.bat
