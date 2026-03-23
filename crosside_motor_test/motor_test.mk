@@ -32,4 +32,7 @@ clean:
 	@del $(TARGET).elf $(TARGET).hex $(TARGET).map 2>NUL
 
 Flash_Load: $(TARGET).hex
-	@echo Flash target expects your course stm32flash setup and COM port config.
+	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL
+	@echo .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 ^>loadf.bat
+	@.\stm32flash\BO230\BO230.exe -b >>loadf.bat
+	@loadf.bat
