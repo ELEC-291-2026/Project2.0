@@ -51,6 +51,8 @@ Current starter abstractions:
 - `field_sensor_adc_update(...)` reads the 3 ADC channels and updates filtering
 - `field_sensor_update(...)` applies filtering to three samples
 - `hbridge_motor_apply(...)` is the motor integration point
+- `hbridge_motor_config.h` is where you change the STM32 PWM timer/channel mapping
+- `hbridge_motor_init()` starts the four PWM outputs used by the two H-bridges
 - `path_context_t` tracks the selected path and how many intersections have been crossed
 
 Important behavior:
@@ -58,3 +60,31 @@ Important behavior:
 - The path action is chosen when a new intersection starts.
 - The code does not count the same intersection multiple times while the robot is still physically over it.
 - `field_sensor_adc.c` uses placeholder STM32 HAL constants and may need small family-specific tweaks before it compiles in your real project.
+
+Minimal motor bring-up:
+
+```c
+#include "hbridge_motor.h"
+
+int main(void)
+{
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_TIM2_Init(); /* Replace with your actual PWM timer init. */
+
+    hbridge_motor_init();
+
+    while (1)
+    {
+        motor_command_t forward = { 600, 600 };
+        hbridge_motor_apply(&forward);
+    }
+}
+```
+
+Before using the example above:
+
+1. Configure four PWM outputs in CubeMX.
+2. Update `hbridge_motor_config.h` to match your timer/channel names.
+3. Set the PWM period so a command of `1000` is full speed.

@@ -188,26 +188,6 @@ path_action_t path_context_on_intersection(path_context_t *context)
     return k_path_table[context->selected_path][context->intersection_count++];
 }
 
-void hbridge_motor_apply(const motor_command_t *command)
-{
-    (void)command;
-
-    /*
-     * Replace this stub with your STM32 H-bridge driver.
-     *
-     * Suggested approach:
-     * - left_command  in range -1000..1000
-     * - right_command in range -1000..1000
-     * - sign sets direction
-     * - magnitude sets PWM duty
-     *
-     * Example mapping for each motor:
-     *   positive -> forward
-     *   negative -> reverse
-     *   zero     -> stop/brake
-     */
-}
-
 void robot_auto_mode_init(path_context_t *context, path_id_t selected_path)
 {
     g_state = ROBOT_AUTO_FOLLOW;
