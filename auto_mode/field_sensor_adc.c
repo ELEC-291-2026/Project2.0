@@ -2,6 +2,10 @@
 #include "field_sensor_adc.h"
 #include "field_sensor_adc_config.h"
 
+#if FIELD_SENSOR_ADC_OVERSAMPLE_COUNT == 0U
+#error "FIELD_SENSOR_ADC_OVERSAMPLE_COUNT must be greater than zero."
+#endif
+
 static void field_sensor_adc_gpio_init(void)
 {
     GPIO_InitTypeDef gpio_init;
@@ -42,6 +46,23 @@ static void field_sensor_adc_configure_channel(unsigned int channel)
     HAL_ADC_ConfigChannel(&FIELD_SENSOR_ADC_HANDLE, &channel_config);
 }
 
+static unsigned int field_sensor_adc_read_averaged_channel(unsigned int channel)
+{
+    unsigned int sample_index;
+    unsigned int sample_total;
+
+    sample_total = 0U;
+
+    for (sample_index = 0U;
+         sample_index < FIELD_SENSOR_ADC_OVERSAMPLE_COUNT;
+         ++sample_index)
+    {
+        sample_total += field_sensor_adc_read_channel(channel);
+    }
+
+    return sample_total / FIELD_SENSOR_ADC_OVERSAMPLE_COUNT;
+}
+
 void field_sensor_adc_init(void)
 {
     field_sensor_adc_gpio_init();
@@ -68,9 +89,9 @@ unsigned int field_sensor_adc_read_channel(unsigned int channel)
 
 void field_sensor_adc_read_raw(field_data_t *sensors)
 {
-    sensors->left_raw = (int)field_sensor_adc_read_channel(FIELD_SENSOR_LEFT_ADC_CHANNEL);
-    sensors->right_raw = (int)field_sensor_adc_read_channel(FIELD_SENSOR_RIGHT_ADC_CHANNEL);
-    sensors->intersection_raw = (int)field_sensor_adc_read_channel(FIELD_SENSOR_INTERSECTION_ADC_CHANNEL);
+    sensors->left_raw = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_LEFT_ADC_CHANNEL);
+    sensors->right_raw = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_RIGHT_ADC_CHANNEL);
+    sensors->intersection_raw = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_INTERSECTION_ADC_CHANNEL);
 }
 
 void field_sensor_adc_update(field_data_t *sensors)
@@ -79,9 +100,9 @@ void field_sensor_adc_update(field_data_t *sensors)
     int right_sample;
     int intersection_sample;
 
-    left_sample = (int)field_sensor_adc_read_channel(FIELD_SENSOR_LEFT_ADC_CHANNEL);
-    right_sample = (int)field_sensor_adc_read_channel(FIELD_SENSOR_RIGHT_ADC_CHANNEL);
-    intersection_sample = (int)field_sensor_adc_read_channel(FIELD_SENSOR_INTERSECTION_ADC_CHANNEL);
+    left_sample = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_LEFT_ADC_CHANNEL);
+    right_sample = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_RIGHT_ADC_CHANNEL);
+    intersection_sample = (int)field_sensor_adc_read_averaged_channel(FIELD_SENSOR_INTERSECTION_ADC_CHANNEL);
 
     field_sensor_update(sensors, left_sample, right_sample, intersection_sample);
 }

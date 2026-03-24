@@ -32,6 +32,16 @@ typedef struct
     int left_filtered;
     int right_filtered;
     int intersection_filtered;
+    int left_baseline;
+    int right_baseline;
+    int intersection_baseline;
+    int left_signal;
+    int right_signal;
+    int intersection_signal;
+    int left_detected;
+    int right_detected;
+    int intersection_detected;
+    unsigned int samples_seen;
 } field_data_t;
 
 typedef struct

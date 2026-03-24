@@ -2,7 +2,10 @@
 #define HBRIDGE_MOTOR_CONFIG_H
 
 /*
- * Update these macros to match your STM32 CubeMX PWM setup.
+ * Update these macros to match your PWM setup.
+ *
+ * The standalone auto-mode firmware in this folder uses TIM2 CH1..CH4
+ * on PA0..PA3 by default, matching the motor test target.
  *
  * Example below:
  * - one timer provides four PWM outputs

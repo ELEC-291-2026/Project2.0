@@ -8,10 +8,27 @@
  * to provide symbols like GPIOA, GPIO_PIN_0, ADC_CHANNEL_0, hadc1, etc.
  *
  * The values below are placeholders only.
+ * They are chosen to avoid conflicting with the default TIM2 motor PWM pins
+ * used by the standalone auto-mode firmware target in this folder.
  */
 
 #define FIELD_SENSOR_ADC_HANDLE hadc1
 #define FIELD_SENSOR_ADC_TIMEOUT_MS 5U
+#define FIELD_SENSOR_ADC_OVERSAMPLE_COUNT 4U
+
+/*
+ * These are firmware-side placeholder tuning values that depend on your
+ * analog front-end gain and detector layout.
+ *
+ * Higher amplifier gain usually means larger ADC swings, so these thresholds
+ * should usually be raised as gain increases and lowered as gain decreases.
+ */
+#define FIELD_SENSOR_TRACK_ENTRY_SIGNAL            60
+#define FIELD_SENSOR_TRACK_EXIT_SIGNAL             35
+#define FIELD_SENSOR_TRACK_STARTUP_MIN_FILTERED    80
+#define FIELD_SENSOR_INTERSECTION_ENTRY_SIGNAL     140
+#define FIELD_SENSOR_INTERSECTION_EXIT_SIGNAL      90
+#define FIELD_SENSOR_INTERSECTION_STARTUP_MIN_FILTERED 140
 
 /*
  * Replace this with the sample-time macro for your exact STM32 family.
@@ -19,20 +36,20 @@
  */
 #define FIELD_SENSOR_ADC_SAMPLE_TIME ADC_SAMPLETIME_71CYCLES_5
 
-#define FIELD_SENSOR_LEFT_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOA_CLK_ENABLE()
-#define FIELD_SENSOR_RIGHT_GPIO_CLK_ENABLE()        __HAL_RCC_GPIOA_CLK_ENABLE()
+#define FIELD_SENSOR_LEFT_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
+#define FIELD_SENSOR_RIGHT_GPIO_CLK_ENABLE()        __HAL_RCC_GPIOB_CLK_ENABLE()
 #define FIELD_SENSOR_INTERSECTION_GPIO_CLK_ENABLE() __HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define FIELD_SENSOR_LEFT_GPIO_PORT          GPIOA
+#define FIELD_SENSOR_LEFT_GPIO_PORT          GPIOB
 #define FIELD_SENSOR_LEFT_GPIO_PIN           GPIO_PIN_0
-#define FIELD_SENSOR_LEFT_ADC_CHANNEL        ADC_CHANNEL_0
+#define FIELD_SENSOR_LEFT_ADC_CHANNEL        ADC_CHANNEL_8
 
-#define FIELD_SENSOR_RIGHT_GPIO_PORT         GPIOA
+#define FIELD_SENSOR_RIGHT_GPIO_PORT         GPIOB
 #define FIELD_SENSOR_RIGHT_GPIO_PIN          GPIO_PIN_1
-#define FIELD_SENSOR_RIGHT_ADC_CHANNEL       ADC_CHANNEL_1
+#define FIELD_SENSOR_RIGHT_ADC_CHANNEL       ADC_CHANNEL_9
 
 #define FIELD_SENSOR_INTERSECTION_GPIO_PORT    GPIOA
-#define FIELD_SENSOR_INTERSECTION_GPIO_PIN     GPIO_PIN_2
-#define FIELD_SENSOR_INTERSECTION_ADC_CHANNEL  ADC_CHANNEL_2
+#define FIELD_SENSOR_INTERSECTION_GPIO_PIN     GPIO_PIN_4
+#define FIELD_SENSOR_INTERSECTION_ADC_CHANNEL  ADC_CHANNEL_4
 
 #endif

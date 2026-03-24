@@ -3,6 +3,13 @@
 This folder contains a minimal starting point for the robot's autonomous mode
 based on the project slides.
 
+It now also includes a standalone bare-metal STM32L051 firmware target for
+wire-following bring-up:
+
+- `main.c`: top-level auto-mode firmware loop
+- `board.c`: STM32L051 bare-metal PWM/ADC bring-up plus a thin HAL-style shim
+- `auto_mode.mk`: CrossIDE-style makefile that builds `auto_mode.elf/.hex`
+
 The software assumes:
 
 - two field detectors are used for left/right tracking
@@ -47,9 +54,12 @@ Current starter states:
 
 Current starter abstractions:
 
+- `main.c` is the standalone firmware entry point for magnetic-wire following tests
+- `board.c` owns the STM32L051 timer/ADC setup used by the standalone target
 - `field_sensor_adc_config.h` is where you change ADC pins and channels
-- `field_sensor_adc_update(...)` reads the 3 ADC channels and updates filtering
-- `field_sensor_update(...)` applies filtering to three samples
+- `field_sensor_adc_config.h` also holds placeholder detector thresholds that should be retuned when your analog amplifier gain changes
+- `field_sensor_adc_update(...)` reads the 3 ADC channels with simple oversampling and updates filtering
+- `field_sensor_update(...)` turns three ADC samples into filtered signal, baseline, and field-detected flags
 - `hbridge_motor_apply(...)` is the motor integration point
 - `hbridge_motor_config.h` is where you change the STM32 PWM timer/channel mapping
 - `hbridge_motor_init()` starts the four PWM outputs used by the two H-bridges
@@ -59,7 +69,23 @@ Important behavior:
 
 - The path action is chosen when a new intersection starts.
 - The code does not count the same intersection multiple times while the robot is still physically over it.
+- Each field sensor now keeps a slow-moving baseline and hysteresis so guide-wire detection is less sensitive to ADC drift.
+- The standalone target defaults to `PATH_ID_1` and runs the control loop every 10 ms after a short sensor warm-up.
 - `field_sensor_adc.c` uses placeholder STM32 HAL constants and may need small family-specific tweaks before it compiles in your real project.
+
+Default standalone wiring placeholders:
+
+- Motor PWM: `PA0..PA3` on `TIM2_CH1..CH4`
+- Left tracker ADC: `PB0` / channel 8
+- Right tracker ADC: `PB1` / channel 9
+- Intersection ADC: `PA4` / channel 4
+
+Build the standalone target:
+
+```sh
+cd auto_mode
+make -f auto_mode.mk
+```
 
 Minimal motor bring-up:
 

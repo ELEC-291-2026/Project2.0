@@ -1,4 +1,5 @@
 #include "robot_auto_mode.h"
+#include "field_sensor_adc_config.h"
 
 /*
  * Auto-mode starter based on the project slides:
@@ -30,16 +31,96 @@ enum
 {
     BASE_SPEED = 600,
     MAX_PWM = 1000,
-    MIN_SIGNAL = 80,
     DEADBAND = 15,
     KP = 2,
-    INTERSECTION_THRESHOLD = 140,
+    FILTER_KEEP_COUNT = 3,
+    BASELINE_IDLE_KEEP_COUNT = 15,
+    BASELINE_STARTUP_KEEP_COUNT = 7,
+    STARTUP_SETTLE_SAMPLES = 16,
     TURN_SPEED = 500
 };
 
-static int lowpass(int previous, int sample)
+static int mix_samples(int previous, int sample, int keep_count)
 {
-    return (3 * previous + sample) / 4;
+    return (keep_count * previous + sample) / (keep_count + 1);
+}
+
+static int absolute_difference(int left_value, int right_value)
+{
+    if (left_value >= right_value)
+    {
+        return left_value - right_value;
+    }
+
+    return right_value - left_value;
+}
+
+static int detection_active(int was_detected,
+    int signal,
+    int filtered,
+    int entry_signal,
+    int exit_signal,
+    int startup_filtered_threshold)
+{
+    if (was_detected)
+    {
+        return signal >= exit_signal;
+    }
+
+    return signal >= entry_signal || filtered >= startup_filtered_threshold;
+}
+
+static int baseline_keep_count(unsigned int samples_seen)
+{
+    if (samples_seen < STARTUP_SETTLE_SAMPLES)
+    {
+        return BASELINE_STARTUP_KEEP_COUNT;
+    }
+
+    return BASELINE_IDLE_KEEP_COUNT;
+}
+
+static void update_sensor_channel(unsigned int samples_seen,
+    int sample,
+    int entry_signal,
+    int exit_signal,
+    int startup_filtered_threshold,
+    int *raw_value,
+    int *filtered_value,
+    int *baseline_value,
+    int *signal_value,
+    int *detected_value)
+{
+    int filtered_sample;
+    int next_signal;
+    int next_detected;
+
+    *raw_value = sample;
+    filtered_sample = mix_samples(*filtered_value, sample, FILTER_KEEP_COUNT);
+    next_signal = absolute_difference(filtered_sample, *baseline_value);
+    next_detected = detection_active(*detected_value,
+        next_signal,
+        filtered_sample,
+        entry_signal,
+        exit_signal,
+        startup_filtered_threshold);
+    if (!next_detected)
+    {
+        *baseline_value = mix_samples(*baseline_value,
+            filtered_sample,
+            baseline_keep_count(samples_seen));
+    }
+    next_signal = absolute_difference(filtered_sample, *baseline_value);
+    next_detected = detection_active(*detected_value,
+        next_signal,
+        filtered_sample,
+        entry_signal,
+        exit_signal,
+        startup_filtered_threshold);
+
+    *filtered_value = filtered_sample;
+    *signal_value = next_signal;
+    *detected_value = next_detected;
 }
 
 static int clamp_pwm(int value)
@@ -81,7 +162,7 @@ static void motor_set_signed(int left_command, int right_command)
 
 static int intersection_detected(const field_data_t *sensors)
 {
-    return sensors->intersection_filtered >= INTERSECTION_THRESHOLD;
+    return sensors->intersection_detected;
 }
 
 static int intersection_started(path_context_t *context, int detected_now)
@@ -107,7 +188,7 @@ static void run_follow_controller(const field_data_t *sensors)
     int left_pwm;
     int right_pwm;
 
-    error = sensors->left_filtered - sensors->right_filtered;
+    error = sensors->left_signal - sensors->right_signal;
 
     if (error < DEADBAND && error > -DEADBAND)
     {
@@ -153,6 +234,16 @@ void field_sensor_reset(field_data_t *sensors)
     sensors->left_filtered = 0;
     sensors->right_filtered = 0;
     sensors->intersection_filtered = 0;
+    sensors->left_baseline = 0;
+    sensors->right_baseline = 0;
+    sensors->intersection_baseline = 0;
+    sensors->left_signal = 0;
+    sensors->right_signal = 0;
+    sensors->intersection_signal = 0;
+    sensors->left_detected = 0;
+    sensors->right_detected = 0;
+    sensors->intersection_detected = 0;
+    sensors->samples_seen = 0U;
 }
 
 void field_sensor_update(field_data_t *sensors,
@@ -160,15 +251,41 @@ void field_sensor_update(field_data_t *sensors,
     int right_sample,
     int intersection_sample)
 {
-    sensors->left_raw = left_sample;
-    sensors->right_raw = right_sample;
-    sensors->intersection_raw = intersection_sample;
+    update_sensor_channel(sensors->samples_seen,
+        left_sample,
+        FIELD_SENSOR_TRACK_ENTRY_SIGNAL,
+        FIELD_SENSOR_TRACK_EXIT_SIGNAL,
+        FIELD_SENSOR_TRACK_STARTUP_MIN_FILTERED,
+        &sensors->left_raw,
+        &sensors->left_filtered,
+        &sensors->left_baseline,
+        &sensors->left_signal,
+        &sensors->left_detected);
+    update_sensor_channel(sensors->samples_seen,
+        right_sample,
+        FIELD_SENSOR_TRACK_ENTRY_SIGNAL,
+        FIELD_SENSOR_TRACK_EXIT_SIGNAL,
+        FIELD_SENSOR_TRACK_STARTUP_MIN_FILTERED,
+        &sensors->right_raw,
+        &sensors->right_filtered,
+        &sensors->right_baseline,
+        &sensors->right_signal,
+        &sensors->right_detected);
+    update_sensor_channel(sensors->samples_seen,
+        intersection_sample,
+        FIELD_SENSOR_INTERSECTION_ENTRY_SIGNAL,
+        FIELD_SENSOR_INTERSECTION_EXIT_SIGNAL,
+        FIELD_SENSOR_INTERSECTION_STARTUP_MIN_FILTERED,
+        &sensors->intersection_raw,
+        &sensors->intersection_filtered,
+        &sensors->intersection_baseline,
+        &sensors->intersection_signal,
+        &sensors->intersection_detected);
 
-    sensors->left_filtered = lowpass(sensors->left_filtered, sensors->left_raw);
-    sensors->right_filtered = lowpass(sensors->right_filtered, sensors->right_raw);
-    sensors->intersection_filtered = lowpass(
-        sensors->intersection_filtered,
-        sensors->intersection_raw);
+    if (sensors->samples_seen < 0xFFFFFFFFU)
+    {
+        ++sensors->samples_seen;
+    }
 }
 
 void path_context_reset(path_context_t *context, path_id_t selected_path)
@@ -204,8 +321,8 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
     switch (g_state)
     {
         case ROBOT_AUTO_FOLLOW:
-            if (sensors->left_filtered < MIN_SIGNAL &&
-                sensors->right_filtered < MIN_SIGNAL)
+            if (!sensors->left_detected &&
+                !sensors->right_detected)
             {
                 motor_stop();
                 g_state = ROBOT_AUTO_LOST;
@@ -244,6 +361,16 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             break;
 
         case ROBOT_AUTO_LOST:
+            if (sensors->left_detected || sensors->right_detected)
+            {
+                g_state = ROBOT_AUTO_FOLLOW;
+                run_follow_controller(sensors);
+                break;
+            }
+
+            motor_stop();
+            break;
+
         case ROBOT_AUTO_STOP:
         default:
             motor_stop();
