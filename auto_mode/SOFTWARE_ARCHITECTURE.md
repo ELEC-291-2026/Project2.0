@@ -13,9 +13,9 @@ The `auto_mode` folder is a self-contained firmware slice for one specific job:
 - choose actions from a preconfigured path table
 - drive the two motors through the H-bridge PWM outputs
 
-It is not yet the full project firmware for the entire robot.  Features such as
-coin pickup, wireless communication, and obstacle sensing are still outside this
-target.
+It is not yet the full project firmware for the entire robot. Remote-control
+firmware and other robot subsystems live outside this target. This folder is
+specifically the field-detection and wire-following slice.
 
 ## Layered Structure
 

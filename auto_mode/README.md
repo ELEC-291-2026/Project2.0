@@ -1,7 +1,7 @@
-# Auto Mode Starter
+# Field Detection and Wire-Following Firmware
 
-This folder contains a minimal starting point for the robot's autonomous mode
-based on the project slides.
+This folder contains the standalone firmware target for magnetic-wire field
+detection and wire following on the robot.
 
 For a higher-level overview of how the firmware is structured, see
 `SOFTWARE_ARCHITECTURE.md`.
@@ -26,7 +26,7 @@ The initial goal is to:
 2. Keep the robot centered over the guide wire.
 3. Detect intersections.
 4. Choose the next action from the selected path and the number of times an intersection has been met.
-5. Leave a clean place to plug in obstacle handling.
+5. Drive the motors according to the wire-following state machine.
 
 Suggested module split for the full firmware:
 
@@ -37,13 +37,12 @@ Suggested module split for the full firmware:
 - `field_sensor.c`: ADC reads and filtering for left/right/intersection
 - `robot_auto_mode.c`: state machine and steering logic
 - `path_manager.c`: path selection and intersection-count lookup
-- `vl53l0x.c`: obstacle sensing
-- `ir_rx.c`: remote command handling
+- `remote_control.c`: remote command handling
 
 Recommended control-loop flow:
 
 1. Update field sensors.
-2. Check for obstacle or signal-loss conditions.
+2. Check for signal-loss conditions.
 3. Detect whether a new intersection has started.
 4. Run one state-machine step.
 5. Apply signed motor outputs to the H-bridges.

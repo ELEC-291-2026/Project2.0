@@ -1,4 +1,4 @@
-# ELEC291 Project 2 — Coin Picking Robot
+# ELEC291 Project 2 — Field Detection and Remote Control Robot
 **University of British Columbia — Electrical and Computer Engineering**  
 **Course:** ELEC291/ELEC292  
 **Instructor:** Dr. Jesús Calviño-Fraga  
@@ -21,7 +21,7 @@
 
 ## Project Overview
 
-This project involves designing, building, programming, and testing a remote-controlled autonomous robot capable of detecting and picking up metal coins from a playing field. The robot uses a metal detector (Colpitts oscillator) to locate coins and an electromagnet to pick them up. It must stay within a defined perimeter boundary using inductive sensors, and can operate in both manual (remote-controlled) and autonomous modes.
+This project involves designing, building, programming, and testing a robot that supports remote control and magnetic-wire field detection. The robot uses three LC tank field-detector circuits to sense the guide wire: two for left/right tracking and one for intersection detection. The system can operate in manual mode through the remote and can also run wire-following logic on the robot.
 
 The system consists of two separate microcontroller-based units — a **robot** and a **remote controller** — that communicate wirelessly via JDY-40 radio modules. Both units must use microcontrollers from **different families** and be fully **battery powered**.
 
@@ -39,10 +39,10 @@ The system consists of two separate microcontroller-based units — a **robot** 
         |                                       |
         |                     ┌─────────────────┼──────────────────┐
         |                     |                 |                  |
-   [6V Motor Rail]        [JDY-40]     [Metal Detector]   [Perimeter Detector x2]
-        |                  (UART)       (Timer Input)          (ADC x2)
-   [H-Bridge 1] ── [Motor L]                   |
-   [H-Bridge 2] ── [Motor R]           [Electromagnet]
+   [6V Motor Rail]        [JDY-40]      [Field Detector x3]
+        |                  (UART)             (ADC x3)
+   [H-Bridge 1] ── [Motor L]
+   [H-Bridge 2] ── [Motor R]
   (via Optocouplers)
 ```
 
@@ -75,9 +75,7 @@ The system consists of two separate microcontroller-based units — a **robot** 
   - Silicon Labs 8051 — EFM8LB12F64
 - Both robot and remote must be **battery powered** (batteries not provided — buy your own)
 - Discrete **MOSFET H-bridge** drivers (P-MOSFET + N-MOSFET + LTV-847 optocouplers)
-- **Colpitts oscillator** metal detector using 1mH ferrite inductor
-- **Two perimeter detector circuits** mounted perpendicular to each other
-- **Electromagnet** coin pickup mechanism
+- **Three LC tank field detector circuits** using ferrite inductors
 - **JDY-40** radio modules (one per unit)
 - Remote must have: **LCD display**, **speaker**, **joystick**
 - All code written in **C** (no Arduino environment)
@@ -103,29 +101,16 @@ The system consists of two separate microcontroller-based units — a **robot** 
 - CW rotation: top P-MOSFET and bottom N-MOSFET on opposite sides conduct
 - CCW rotation: opposite pair conducts
 
-### Metal Detector — Colpitts Oscillator
-- Uses 1mH ferrite core inductor (DigiKey M8275-ND) — handle carefully, core breaks if dropped
-- Component values: R = 100Ω–1kΩ, C1 = 1nF–10nF, C2 = 10nF–100nF, L = 1mH
-- Requires **5V supply** — PMOS threshold voltage too high for 3.3V
-- Use a 5V-tolerant input pin on the microcontroller
-- When metal is brought near the inductor, inductance changes slightly, shifting the oscillator frequency
-- Microcontroller measures frequency via timer/capture interrupt
-- Establish a baseline frequency, trigger coin detection when frequency shifts beyond a threshold
-- Discrete CMOS inverter can be built using one NMOS + one PMOS if a logic IC is not available
-
-### Electromagnet
-- Activated when coin is detected
-- Holds coin during robot movement, deactivated to release
-- Assembly instructions provided on Canvas
-
-### Perimeter Detector
-- Two identical circuits mounted **perpendicular** to each other on the robot
-- Each circuit: pickup inductor → amplifier → peak detector → ADC input
-- When inductor gets close to the perimeter wire, peak detector output voltage increases
-- Two perpendicular sensors ensure the wire is always detected regardless of approach angle
-- ADC reads both channels continuously in auto mode
-- When either channel exceeds threshold: back up, turn, resume navigation
-- Perimeter signal source: 555 timer in astable configuration + 47Ω series resistor + 9V battery (preferred over function generator for portability)
+### Field Detector Array
+- Three detector circuits are used:
+  - left tracker
+  - right tracker
+  - intersection detector
+- Each circuit is: pickup inductor → amplifier → peak detector → ADC input
+- The left and right channels are compared to keep the robot centered over the magnetic guide wire
+- The third channel is used to detect intersections for preconfigured path decisions
+- ADC reads all three channels continuously during wire-following tests
+- Thresholds and filtering are tuned in firmware to match the analog amplifier gain
 
 ---
 
@@ -139,7 +124,7 @@ The system consists of two separate microcontroller-based units — a **robot** 
 ### LCD Display
 - 6 digital output pins from microcontroller
 - Parallel interface, bit-banged
-- Displays: current mode (manual/auto), coin count, battery level, signal status
+- Displays: current mode (manual/auto), battery level, signal status
 
 ### Joystick
 - Two potentiometers (X and Y axes) → 2 ADC inputs on microcontroller
@@ -148,7 +133,7 @@ The system consists of two separate microcontroller-based units — a **robot** 
 
 ### Speaker
 - Single PWM output pin
-- Generates tones for: coin detected, perimeter hit, mode switch, low battery warning
+- Generates tones for: mode switch, field/intersection event, low battery warning
 
 ---
 
@@ -179,7 +164,7 @@ Define a simple byte-based command set, for example:
 0x05 — Stop
 0x06 — Auto mode on
 0x07 — Auto mode off
-0x08 — Coin detected (robot → remote)
+0x08 — Field/intersection status (robot → remote)
 ```
 
 ### JDY-40 Wiring by Microcontroller
@@ -200,9 +185,9 @@ Add 1kΩ series resistors on all JDY-40 signal lines for protection.
 
 - Minimum area: **0.5 m²**
 - Recommended surface: Con-Tact non-adhesive shelf liner (clear diamonds, 60"×20") from Home Depot (~$17) — good grip, easy to roll and transport, fits lab benches
-- Perimeter wire laid around the boundary of the playing field
-- Coins scattered inside the perimeter
-- Perimeter signal source (555 timer circuit) placed outside the field, wire looped around the perimeter
+- Magnetic guide wire laid out on the playing field
+- Intersections are formed by the wire layout
+- Signal source drives the guide wire during field-following tests
 
 ---
 
@@ -214,12 +199,12 @@ Add 1kΩ series resistors on all JDY-40 signal lines for protection.
 - Speaker and LCD on remote provide feedback
 
 ### Automatic Mode
-- Robot navigates the field independently
+- Robot follows the magnetic guide wire using the three field detectors
 - State machine:
-  1. **Searching** — drive forward, scanning for metal
-  2. **Coin Detected** — stop, activate electromagnet, pause
-  3. **Resuming** — deactivate electromagnet, continue searching
-  4. **Perimeter Hit** — back up, turn away, resume searching
+  1. **Follow** — compare left and right detector signals and steer to stay centered
+  2. **Intersection** — detect a new intersection with the third detector
+  3. **Action** — move straight, left, right, or stop using the selected preconfigured path
+  4. **Lost** — stop when the guide wire signal disappears
 - Remote can start/stop auto mode and display live status
 
 
@@ -243,7 +228,7 @@ Add 1kΩ series resistors on all JDY-40 signal lines for protection.
 | Aluminum chassis | Water jet cut at UBC | 1 |
 | 4×AA battery holder | Robot motor power | 1 |
 | 9V battery clip | Remote or perimeter source | 1 |
-| 1mH inductors | Ferrite core wirewound (DigiKey M8275-ND) — 2 for perimeter, 1 for metal detector | 3 |
+| 1mH inductors | Ferrite core wirewound (DigiKey M8275-ND) — for the three field detector circuits | 3 |
 | LTV-847 | Quad optocoupler | 2 |
 | P-MOSFET + N-MOSFET | H-bridge transistors | per H-bridge |
 | JDY-40 | Wireless radio module | 2 |
@@ -292,7 +277,7 @@ These features go beyond the base requirements and are what push a demo score fr
 ---
 
 ### Web Telemetry Dashboard (Wemos D1 Mini)
-**What it does:** Robot broadcasts live telemetry to a webpage — coin count, battery voltage, current mode, perimeter sensor readings, motor speeds — accessible by anyone on the same WiFi network.
+**What it does:** Robot broadcasts live telemetry to a webpage — battery voltage, current mode, field sensor readings, and motor speeds — accessible by anyone on the same WiFi network.
 
 **Hardware:** Wemos D1 Mini ESP8266 (~$5 on Amazon). **Buy the D1 Mini version, not the bare ESP-01 module.** Standard 2.54mm headers, plugs straight into breadboard. Connects to robot microcontroller via UART.
 
@@ -301,14 +286,14 @@ These features go beyond the base requirements and are what push a demo score fr
 
 ---
 
-### Coin Heatmap
-**What it does:** Robot tracks approximate position using dead reckoning (motor commands + timing) and remembers where coins were found. In subsequent auto mode runs it focuses effort on previously productive areas and skips zones that were already cleared.
+### Field Signal Logger
+**What it does:** Robot logs left, right, and intersection detector strengths over time so you can tune thresholds and verify wire-following behavior.
 
 **Hardware:** No additional hardware required.
 
-**Software:** Maintain a simple 2D grid array representing the playing field. Update estimated position based on motor direction and timing. Mark grid cells where coins are detected. Bias autonomous navigation toward unvisited or previously productive cells.
+**Software:** Stream or store filtered left/right/intersection values together with the current path state. Use the logs to adjust thresholds, confirm intersection detection, and debug lost-wire events.
 
 
 
 *README last updated: March 2026*  
-*ELEC291 Project 2 — Coin Picking Robot — UBC ECE*
+*ELEC291 Project 2 — Field Detection and Remote Control Robot — UBC ECE*
