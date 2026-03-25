@@ -3,6 +3,9 @@
 This folder contains a minimal starting point for the robot's autonomous mode
 based on the project slides.
 
+For a higher-level overview of how the firmware is structured, see
+`SOFTWARE_ARCHITECTURE.md`.
+
 It now also includes a standalone bare-metal STM32L051 firmware target for
 wire-following bring-up:
 
