@@ -7,9 +7,10 @@
  * This header is written in STM32 HAL style, so it expects your actual project
  * to provide symbols like GPIOA, GPIO_PIN_0, ADC_CHANNEL_0, hadc1, etc.
  *
- * The values below are placeholders only.
- * They are chosen to avoid conflicting with the default TIM2 motor PWM pins
- * used by the standalone auto-mode firmware target in this folder.
+ * The values below match the current robot wiring:
+ *   left tracker -> PC0 / ADC_IN10
+ *   right tracker -> PC1 / ADC_IN11
+ *   intersection -> PC2 / ADC_IN12
  */
 
 #define FIELD_SENSOR_ADC_HANDLE hadc1
@@ -36,20 +37,20 @@
  */
 #define FIELD_SENSOR_ADC_SAMPLE_TIME ADC_SAMPLETIME_71CYCLES_5
 
-#define FIELD_SENSOR_LEFT_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
-#define FIELD_SENSOR_RIGHT_GPIO_CLK_ENABLE()        __HAL_RCC_GPIOB_CLK_ENABLE()
-#define FIELD_SENSOR_INTERSECTION_GPIO_CLK_ENABLE() __HAL_RCC_GPIOA_CLK_ENABLE()
+#define FIELD_SENSOR_LEFT_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOC_CLK_ENABLE()
+#define FIELD_SENSOR_RIGHT_GPIO_CLK_ENABLE()        __HAL_RCC_GPIOC_CLK_ENABLE()
+#define FIELD_SENSOR_INTERSECTION_GPIO_CLK_ENABLE() __HAL_RCC_GPIOC_CLK_ENABLE()
 
-#define FIELD_SENSOR_LEFT_GPIO_PORT          GPIOB
+#define FIELD_SENSOR_LEFT_GPIO_PORT          GPIOC
 #define FIELD_SENSOR_LEFT_GPIO_PIN           GPIO_PIN_0
-#define FIELD_SENSOR_LEFT_ADC_CHANNEL        ADC_CHANNEL_8
+#define FIELD_SENSOR_LEFT_ADC_CHANNEL        ADC_CHANNEL_10
 
-#define FIELD_SENSOR_RIGHT_GPIO_PORT         GPIOB
+#define FIELD_SENSOR_RIGHT_GPIO_PORT         GPIOC
 #define FIELD_SENSOR_RIGHT_GPIO_PIN          GPIO_PIN_1
-#define FIELD_SENSOR_RIGHT_ADC_CHANNEL       ADC_CHANNEL_9
+#define FIELD_SENSOR_RIGHT_ADC_CHANNEL       ADC_CHANNEL_11
 
-#define FIELD_SENSOR_INTERSECTION_GPIO_PORT    GPIOA
-#define FIELD_SENSOR_INTERSECTION_GPIO_PIN     GPIO_PIN_4
-#define FIELD_SENSOR_INTERSECTION_ADC_CHANNEL  ADC_CHANNEL_4
+#define FIELD_SENSOR_INTERSECTION_GPIO_PORT    GPIOC
+#define FIELD_SENSOR_INTERSECTION_GPIO_PIN     GPIO_PIN_2
+#define FIELD_SENSOR_INTERSECTION_ADC_CHANNEL  ADC_CHANNEL_12
 
 #endif

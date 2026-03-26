@@ -17,7 +17,7 @@ CPUFLAGS=-mcpu=cortex-m0plus -mthumb
 CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -Wextra -I. -I../Common/Include
 LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lgcc
 
-OBJS=main.o board.o field_sensor_adc.o hbridge_motor.o robot_auto_mode.o startup.o
+OBJS=main.o board.o collision_detector.o field_sensor_adc.o hbridge_motor.o robot_auto_mode.o vl53l0x.o startup.o
 
 all: $(TARGET).hex
 
@@ -35,6 +35,9 @@ main.o: main.c
 board.o: board.c
 	$(CC) -c $(CFLAGS) board.c -o board.o
 
+collision_detector.o: collision_detector.c
+	$(CC) -c $(CFLAGS) collision_detector.c -o collision_detector.o
+
 field_sensor_adc.o: field_sensor_adc.c
 	$(CC) -c $(CFLAGS) field_sensor_adc.c -o field_sensor_adc.o
 
@@ -43,6 +46,9 @@ hbridge_motor.o: hbridge_motor.c
 
 robot_auto_mode.o: robot_auto_mode.c
 	$(CC) -c $(CFLAGS) robot_auto_mode.c -o robot_auto_mode.o
+
+vl53l0x.o: ../vl53l0x.c
+	$(CC) -c $(CFLAGS) ../vl53l0x.c -o vl53l0x.o
 
 startup.o: ../Common/Source/startup.c
 	$(CC) -c $(CFLAGS) ../Common/Source/startup.c -o startup.o
