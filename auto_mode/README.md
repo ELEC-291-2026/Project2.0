@@ -1,7 +1,7 @@
 # Field Detection and Wire-Following Firmware
 
 This folder contains the standalone firmware target for magnetic-wire field
-detection and wire following on the robot.
+detection, wire following, and obstacle stopping on the robot.
 
 For a higher-level overview of how the firmware is structured, see
 `SOFTWARE_ARCHITECTURE.md`.
@@ -18,6 +18,7 @@ The software assumes:
 - two field detectors are used for left/right tracking
 - one field detector is used for intersection detection
 - all three detector outputs go to ADC inputs
+- one VL53L0X sensor is used for front collision detection
 - each motor is controlled through an H-bridge
 
 The initial goal is to:
@@ -26,13 +27,15 @@ The initial goal is to:
 2. Keep the robot centered over the guide wire.
 3. Detect intersections.
 4. Choose the next action from the selected path and the number of times an intersection has been met.
-5. Drive the motors according to the wire-following state machine.
+5. Stop the robot if the collision detector reports an obstacle.
+6. Drive the motors according to the wire-following state machine.
 
 Suggested module split for the full firmware:
 
 - `board.c`: clocks, GPIO, timer, ADC, I2C init
 - `field_sensor_adc_config.h`: editable ADC pin and channel mapping
 - `field_sensor_adc.c`: STM32 HAL ADC reads for the 3 field sensors
+- `collision_detector.c`: VL53L0X collision readout and stop override support
 - `hbridge_motor.c`: signed motor command to GPIO/PWM mapping
 - `field_sensor.c`: ADC reads and filtering for left/right/intersection
 - `robot_auto_mode.c`: state machine and steering logic
@@ -42,10 +45,11 @@ Suggested module split for the full firmware:
 Recommended control-loop flow:
 
 1. Update field sensors.
-2. Check for signal-loss conditions.
-3. Detect whether a new intersection has started.
-4. Run one state-machine step.
-5. Apply signed motor outputs to the H-bridges.
+2. Update the collision detector.
+3. If obstacle detected, stop the motors.
+4. Otherwise check for signal-loss conditions and intersections.
+5. Run one state-machine step.
+6. Apply signed motor outputs to the H-bridges.
 
 Current starter states:
 
@@ -61,8 +65,10 @@ Current starter abstractions:
 - `field_sensor_adc_config.h` is where you change ADC pins and channels
 - `field_sensor_adc_config.h` also holds placeholder detector thresholds that should be retuned when your analog amplifier gain changes
 - `field_sensor_adc_update(...)` reads the 3 ADC channels with simple oversampling and updates filtering
+- `collision_detector_update(...)` reads the VL53L0X in continuous mode and raises an obstacle flag
 - `field_sensor_update(...)` turns three ADC samples into filtered signal, baseline, and field-detected flags
 - `hbridge_motor_apply(...)` is the motor integration point
+- `PA7` is reserved for the collision sensor control line
 - `hbridge_motor_config.h` is where you change the STM32 PWM timer/channel mapping
 - `hbridge_motor_init()` starts the four PWM outputs used by the two H-bridges
 - `path_context_t` tracks the selected path and how many intersections have been crossed
@@ -78,9 +84,11 @@ Important behavior:
 Default standalone wiring placeholders:
 
 - Motor PWM: `PA0..PA3` on `TIM2_CH1..CH4`
-- Left tracker ADC: `PB0` / channel 8
-- Right tracker ADC: `PB1` / channel 9
-- Intersection ADC: `PA4` / channel 4
+- Left tracker ADC: `PC0` / `ADC_IN10`
+- Right tracker ADC: `PC1` / `ADC_IN11`
+- Intersection ADC: `PC2` / `ADC_IN12`
+- Collision sensor control: `PA7`
+- VL53L0X I2C: `PB6` / `PB7`
 
 Build the standalone target:
 

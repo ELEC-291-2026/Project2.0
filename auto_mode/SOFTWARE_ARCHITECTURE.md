@@ -1,7 +1,7 @@
 # Auto Mode Software Architecture
 
 This document describes the standalone `auto_mode` firmware target used to test
-magnetic-wire following on the STM32L051 robot.
+magnetic-wire following and collision stopping on the STM32L051 robot.
 
 ## Purpose
 
@@ -10,6 +10,8 @@ The `auto_mode` folder is a self-contained firmware slice for one specific job:
 - read three field-detector voltages
 - follow the magnetic guide wire using the left/right detector pair
 - detect intersections using the third detector
+- monitor the front collision sensor
+- stop the robot when an obstacle is detected
 - choose actions from a preconfigured path table
 - drive the two motors through the H-bridge PWM outputs
 
@@ -25,8 +27,9 @@ The code is organized in layers from low-level hardware access up to behavior:
 main.c
   -> board_init()
   -> field_sensor_adc_update()
-  -> robot_auto_mode_step()
-  -> hbridge_motor_apply()
+  -> collision_detector_update()
+  -> robot_auto_mode_step() or hbridge_motor_stop_all()
+  -> hbridge_motor_apply() through the selected control path
 
 board.c / main.h
   -> STM32L051 register setup
@@ -38,6 +41,12 @@ field_sensor_adc.c / field_sensor_adc_config.h
   -> sensor GPIO setup
   -> ADC channel selection
   -> oversampled sensor reads
+
+collision_detector.c / collision_detector_config.h
+  -> PA7 collision-sensor control
+  -> PB6/PB7 I2C setup for VL53L0X
+  -> continuous range measurement
+  -> obstacle stop decision
 
 robot_auto_mode.c / robot_auto_mode.h
   -> field signal filtering
@@ -58,6 +67,7 @@ hbridge_motor.c / hbridge_motor_config.h
   - Starts the standalone firmware.
   - Initializes board peripherals and modules.
   - Warms up field sensors.
+  - Initializes the collision detector.
   - Repeats the control loop every 10 ms.
 
 ### Hardware Support
@@ -94,6 +104,25 @@ hbridge_motor.c / hbridge_motor_config.h
   - Reads the three field sensor ADC channels.
   - Averages repeated readings for noise reduction.
   - Passes samples into the field signal processing logic.
+
+### Collision Detection
+
+- `collision_detector_config.h`
+  - Hardware mapping and obstacle threshold for the VL53L0X path.
+  - Defines:
+    - `PA7` as the collision sensor control pin
+    - I2C timing and address constants
+    - obstacle stop threshold in millimeters
+
+- `collision_detector.h`
+  - Public declarations for the collision detector module.
+
+- `collision_detector.c`
+  - Initializes `PA7` for collision sensor control.
+  - Configures `PB6/PB7` as I2C1 for the VL53L0X.
+  - Reuses the shared `vl53l0x.c` driver from the project root.
+  - Starts continuous ranging and caches the latest distance.
+  - Raises an obstacle-detected flag used to stop the motors in the main loop.
 
 ### Control Logic
 
@@ -137,8 +166,8 @@ hbridge_motor.c / hbridge_motor_config.h
 
 - `auto_mode.mk`
   - Build script for the standalone firmware target.
-  - Compiles the `auto_mode` sources plus the shared startup code from
-    `../Common`.
+  - Compiles the `auto_mode` sources, the shared `vl53l0x.c` driver, and the
+    startup code from `../Common`.
   - Produces:
     - `auto_mode.elf`
     - `auto_mode.hex`
@@ -151,8 +180,9 @@ At startup:
 2. `field_sensor_adc_init()` configures sensor pins.
 3. `hbridge_motor_init()` prepares PWM outputs.
 4. `field_sensor_reset()` clears sensor state.
-5. A short warm-up loop lets the detector filters and baselines settle.
-6. `robot_auto_mode_init()` selects the initial path and resets path state.
+5. `collision_detector_init()` brings up the VL53L0X.
+6. A short warm-up loop lets the detector filters and baselines settle.
+7. `robot_auto_mode_init()` selects the initial path and resets path state.
 
 During each loop iteration:
 
@@ -161,16 +191,25 @@ During each loop iteration:
    - applies oversampling
    - updates filtered and baseline-compensated sensor state
 
-2. `robot_auto_mode_step(&sensors, &path_context)`
+2. `collision_detector_update(&collision)`
+   - checks whether a new VL53L0X measurement is ready
+   - reads distance when available
+   - updates the obstacle-detected flag
+
+3. Obstacle arbitration in `main.c`
+   - if an obstacle is detected, call `hbridge_motor_stop_all()`
+   - otherwise run the normal auto-mode state machine
+
+4. `robot_auto_mode_step(&sensors, &path_context)`
    - checks wire presence
    - checks intersection state
    - runs follow logic or path action logic
    - computes signed motor commands
 
-3. `hbridge_motor_apply(...)`
+5. `hbridge_motor_apply(...)`
    - updates TIM2 PWM compare values for the H-bridge
 
-4. `delayms(10)`
+6. `delayms(10)`
    - enforces the loop period
 
 ## Sensor Interpretation Model
@@ -224,12 +263,17 @@ The standalone target currently assumes:
   - `PA3` -> TIM2_CH4
 
 - field detector ADC inputs:
-  - left tracker -> `PB0` -> ADC channel 8
-  - right tracker -> `PB1` -> ADC channel 9
-  - intersection detector -> `PA4` -> ADC channel 4
+  - left tracker -> `PC0` -> ADC_IN10
+  - right tracker -> `PC1` -> ADC_IN11
+  - intersection detector -> `PC2` -> ADC_IN12
 
-These are placeholder defaults and should be updated to match the real robot
-wiring.
+- collision detector:
+  - `PA7` -> VL53L0X control pin
+  - `PB6` -> I2C1 SCL
+  - `PB7` -> I2C1 SDA
+
+The field detector thresholds are still placeholder tuning values and should be
+retuned to match the real analog front-end gain.
 
 ## Build and Run
 
@@ -257,6 +301,9 @@ The generated files are:
   code, especially the ADC and timer examples.
 - The sensor thresholds are intentionally placeholders because the real values
   depend on detector gain, geometry, and analog front-end behavior.
+- The collision detector currently acts as a top-level stop override in
+  `main.c`, which keeps the wire-following state machine unchanged and makes
+  obstacle integration easy to test on hardware.
 - The code is split into small modules so a future full robot firmware can
   reuse the same sensor, control, and motor layers under a larger top-level
   application.
