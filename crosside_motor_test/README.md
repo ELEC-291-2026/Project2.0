@@ -35,6 +35,8 @@ Generated output:
 Notes:
 
 - The support files in `../Common` came from the course STM32L051 bundle.
+- The right motor command is inverted in software so positive left/right
+  commands drive the robot in the same overall direction.
 - If a motor spins backward, swap the motor wires or change the sign in
   `set_motor_outputs(...)`.
 - `makefile.mac` includes an optional `flash` target, but it expects a local
