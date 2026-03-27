@@ -304,6 +304,15 @@ void main(void)
     clock_init();
     uart_init();
     pwm_init();
+
+    /* --- startup motor test: spin both forward 1s then stop --- */
+    uart_puts("Motor test...\r\n");
+    motors_set(400, 400);
+    delayms(1000);
+    motors_stop();
+    delayms(500);
+    uart_puts("Motor test done.\r\n");
+
     adc_init();
     motors_stop();
 
