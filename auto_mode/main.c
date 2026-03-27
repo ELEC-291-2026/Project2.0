@@ -1,58 +1,326 @@
-#include "main.h"
-#include "collision_detector.h"
-#include "field_sensor_adc.h"
-#include "hbridge_motor.h"
-#include "robot_auto_mode.h"
+#include "stm32l051xx.h"
+/* #include "../Common/Include/serial.h" */
+/* #include <stdio.h> */
 
-enum
+#define ADC_CH_LEFT         10
+#define ADC_CH_RIGHT        11
+#define ADC_CH_INTERSECT    12
+
+#define BASE_SPEED          600
+#define TURN_SPEED          500
+#define MAX_PWM             1000
+#define KP                  2
+#define DEADBAND            15
+
+#define ENTRY_SIGNAL        10
+#define EXIT_SIGNAL         5
+#define INTERSECT_ENTRY     20
+#define INTERSECT_EXIT      10
+
+#define F_CPU 32000000UL
+
+static void wait_1ms(void)
 {
-    AUTO_MODE_DEFAULT_PATH = PATH_ID_1,
-    AUTO_MODE_SENSOR_WARMUP_SAMPLES = 64,
-    AUTO_MODE_LOOP_DELAY_MS = 10
+    SysTick->LOAD = (F_CPU / 1000UL) - 1UL;
+    SysTick->VAL  = 0;
+    SysTick->CTRL = 0x5;
+    while ((SysTick->CTRL & (1 << 16)) == 0);
+    SysTick->CTRL = 0;
+}
+
+static void delayms(unsigned int ms)
+{
+    while (ms--) wait_1ms();
+}
+
+static void pwm_init(void)
+{
+    RCC->IOPENR  |= (1 << 0);
+    RCC->APB1ENR |= (1 << 0);
+
+    GPIOA->MODER &= ~(0xFF);
+    GPIOA->MODER |=  (0xAA);
+
+    GPIOA->AFR[0] &= ~(0xFFFF);
+    GPIOA->AFR[0] |=  (0x2222);
+
+    TIM2->PSC  = 31;
+    TIM2->ARR  = MAX_PWM - 1;
+    TIM2->CCR1 = 0;
+    TIM2->CCR2 = 0;
+    TIM2->CCR3 = 0;
+    TIM2->CCR4 = 0;
+
+    TIM2->CCMR1 = (6 << 4) | (1 << 3) | (6 << 12) | (1 << 11);
+    TIM2->CCMR2 = (6 << 4) | (1 << 3) | (6 << 12) | (1 << 11);
+    TIM2->CCER  = (1<<0) | (1<<4) | (1<<8) | (1<<12);
+    TIM2->EGR   = 1;
+    TIM2->CR1   = (1 << 7) | (1 << 0);
+}
+
+static void motors_stop(void)
+{
+    TIM2->CCR1 = 0;
+    TIM2->CCR2 = 0;
+    TIM2->CCR3 = 0;
+    TIM2->CCR4 = 0;
+}
+
+static void motors_set(int left, int right)
+{
+    motors_stop();
+    if (left > 0)
+        TIM2->CCR1 = (unsigned int)(left  > MAX_PWM ? MAX_PWM : left);
+    else if (left < 0)
+        TIM2->CCR2 = (unsigned int)((-left) > MAX_PWM ? MAX_PWM : -left);
+
+    if (right > 0)
+        TIM2->CCR3 = (unsigned int)(right  > MAX_PWM ? MAX_PWM : right);
+    else if (right < 0)
+        TIM2->CCR4 = (unsigned int)((-right) > MAX_PWM ? MAX_PWM : -right);
+}
+
+static void adc_init(void)
+{
+    RCC->IOPENR  |= (1 << 2);
+    RCC->APB2ENR |= (1 << 9);
+
+    GPIOC->MODER |= (3 << 0) | (3 << 2) | (3 << 4);
+
+    ADC1->CFGR2 |= (1 << 30);
+
+    if (ADC1->CR & (1 << 0))
+    {
+        ADC1->CR |= (1 << 1);
+        while (ADC1->CR & (1 << 0));
+    }
+
+    ADC1->CR |= (1 << 28);
+    delayms(1);
+
+    ADC1->CR |= (1 << 31);
+    while (ADC1->CR & (1 << 31));
+
+    ADC1->SMPR  = 0x5;
+    ADC1->CFGR1 = 0;
+    ADC1->CR   |= (1 << 0);
+    while (!(ADC1->ISR & (1 << 0)));
+}
+
+static int adc_read(int channel)
+{
+    int sum;
+    int i;
+
+    sum = 0;
+    ADC1->CHSELR = (1 << channel);
+    for (i = 0; i < 4; i++)
+    {
+        ADC1->CR |= (1 << 2);
+        while (!(ADC1->ISR & (1 << 2)));
+        sum += (int)(ADC1->DR & 0xFFF);
+    }
+    return sum / 4;
+}
+
+typedef struct {
+    int raw;
+    int filtered;
+    int baseline;
+    int signal;
+    int detected;
+    unsigned int samples;
+} sensor_ch_t;
+
+static int mix(int prev, int sample, int k)
+{
+    return (k * prev + sample) / (k + 1);
+}
+
+static int absdiff(int a, int b)
+{
+    return a > b ? a - b : b - a;
+}
+
+static void update_ch(sensor_ch_t *ch, int sample, int entry, int exit_sig)
+{
+    int filt;
+    int bk;
+    int sig;
+    int det;
+
+    filt = mix(ch->filtered, sample, 3);
+    bk   = (ch->samples < 16) ? 7 : 15;
+    sig  = absdiff(filt, ch->baseline);
+
+    if (ch->detected)
+        det = (sig >= exit_sig);
+    else
+        det = (sig >= entry);
+
+    if (!det)
+        ch->baseline = mix(ch->baseline, filt, bk);
+
+    sig = absdiff(filt, ch->baseline);
+    if (ch->detected)
+        det = (sig >= exit_sig);
+    else
+        det = (sig >= entry);
+
+    ch->raw      = sample;
+    ch->filtered = filt;
+    ch->signal   = sig;
+    ch->detected = det;
+    if (ch->samples < 0xFFFFFFFFU) ch->samples++;
+}
+
+typedef enum { ST_FOLLOW, ST_INTERSECTION, ST_LOST, ST_STOP } state_t;
+
+static const int k_paths[3][8] = {
+    { 0, 1, 1, 0, 2, 1, 2, 3 },
+    { 1, 2, 1, 2, 0, 0, 3, 3 },
+    { 2, 0, 2, 1, 2, 1, 0, 3 }
 };
 
-static void warm_up_field_sensors(field_data_t *sensors)
-{
-    unsigned int sample_index;
+static state_t g_state;
+static int     g_action;
 
-    for (sample_index = 0U;
-         sample_index < AUTO_MODE_SENSOR_WARMUP_SAMPLES;
-         ++sample_index)
+static void run_action(int action)
+{
+    switch (action)
     {
-        field_sensor_adc_update(sensors);
-        delayms(2U);
+        case 1: motors_set(-TURN_SPEED,  TURN_SPEED); break;
+        case 2: motors_set( TURN_SPEED, -TURN_SPEED); break;
+        case 3: motors_stop();                         break;
+        default: motors_set(BASE_SPEED, BASE_SPEED);  break;
     }
+}
+
+static void run_follow(int left_sig, int right_sig)
+{
+    int error;
+    int correction;
+
+    error = left_sig - right_sig;
+    if (error > -DEADBAND && error < DEADBAND) error = 0;
+    correction = KP * error;
+    motors_set(BASE_SPEED - correction, BASE_SPEED + correction);
 }
 
 void main(void)
 {
-    field_data_t sensors;
-    path_context_t path_context;
-    collision_detector_t collision;
+    sensor_ch_t left;
+    sensor_ch_t right;
+    sensor_ch_t intersect;
+    int path;
+    int ix_count;
+    int ix_active;
+    unsigned int i;
+    unsigned int loop;
 
-    board_init();
-    field_sensor_adc_init();
-    hbridge_motor_init();
+    left.raw = 0; left.filtered = 0; left.baseline = 0;
+    left.signal = 0; left.detected = 0; left.samples = 0;
 
-    field_sensor_reset(&sensors);
-    collision_detector_init(&collision);
-    warm_up_field_sensors(&sensors);
-    robot_auto_mode_init(&path_context, (path_id_t)AUTO_MODE_DEFAULT_PATH);
+    right.raw = 0; right.filtered = 0; right.baseline = 0;
+    right.signal = 0; right.detected = 0; right.samples = 0;
+
+    intersect.raw = 0; intersect.filtered = 0; intersect.baseline = 0;
+    intersect.signal = 0; intersect.detected = 0; intersect.samples = 0;
+
+    path      = 0;
+    ix_count  = 0;
+    ix_active = 0;
+    g_state   = ST_FOLLOW;
+    g_action  = 0;
+    loop      = 0;
+
+    pwm_init();
+    adc_init();
+    motors_stop();
+
+    delayms(500);
+    /* printf("\x1b[2J\x1b[1;1H"); */
+    /* printf("Robot starting up...\r\n"); */
+
+    /* warm up */
+    for (i = 0; i < 64; i++)
+    {
+        update_ch(&left,      adc_read(ADC_CH_LEFT),      ENTRY_SIGNAL,    EXIT_SIGNAL);
+        update_ch(&right,     adc_read(ADC_CH_RIGHT),     ENTRY_SIGNAL,    EXIT_SIGNAL);
+        update_ch(&intersect, adc_read(ADC_CH_INTERSECT), INTERSECT_ENTRY, INTERSECT_EXIT);
+        delayms(2);
+    }
+
+    /* printf("Warmup done. Entering main loop.\r\n"); */
 
     while (1)
     {
-        field_sensor_adc_update(&sensors);
-        collision_detector_update(&collision);
+        update_ch(&left,      adc_read(ADC_CH_LEFT),      ENTRY_SIGNAL,    EXIT_SIGNAL);
+        update_ch(&right,     adc_read(ADC_CH_RIGHT),     ENTRY_SIGNAL,    EXIT_SIGNAL);
+        update_ch(&intersect, adc_read(ADC_CH_INTERSECT), INTERSECT_ENTRY, INTERSECT_EXIT);
 
-        if (collision.obstacle_detected)
+        /* if (loop % 50 == 0)
         {
-            hbridge_motor_stop_all();
-        }
-        else
+            printf("L raw=%4d sig=%4d det=%d | R raw=%4d sig=%4d det=%d | state=%d\r\n",
+                left.raw,  left.signal,  left.detected,
+                right.raw, right.signal, right.detected,
+                (int)g_state);
+            fflush(stdout);
+        } */
+        loop++;
+
+        switch (g_state)
         {
-            robot_auto_mode_step(&sensors, &path_context);
+            case ST_FOLLOW:
+                if (!left.detected && !right.detected)
+                {
+                    motors_stop();
+                    g_state = ST_LOST;
+                    break;
+                }
+                if (intersect.detected && !ix_active)
+                {
+                    ix_active = 1;
+                    g_action  = (ix_count < 8) ? k_paths[path][ix_count++] : 3;
+                    g_state   = ST_INTERSECTION;
+                    run_action(g_action);
+                    break;
+                }
+                if (!intersect.detected) ix_active = 0;
+                run_follow(left.signal, right.signal);
+                break;
+
+            case ST_INTERSECTION:
+                if (!intersect.detected)
+                {
+                    ix_active = 0;
+                    if (g_action == 3) { g_state = ST_STOP; motors_stop(); }
+                    else               { g_state = ST_FOLLOW; }
+                }
+                else
+                {
+                    run_action(g_action);
+                }
+                break;
+
+            case ST_LOST:
+                if (left.detected || right.detected)
+                {
+                    g_state = ST_FOLLOW;
+                    run_follow(left.signal, right.signal);
+                }
+                else
+                {
+                    motors_stop();
+                }
+                break;
+
+            case ST_STOP:
+            default:
+                motors_stop();
+                break;
         }
 
-        delayms(AUTO_MODE_LOOP_DELAY_MS);
+        delayms(10);
     }
 }
