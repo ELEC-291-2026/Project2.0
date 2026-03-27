@@ -12,7 +12,7 @@
 
 #define ENTRY_SIGNAL        10
 #define EXIT_SIGNAL         5
-#define INTERSECT_ENTRY     150
+#define INTERSECT_ENTRY     9999   /* disabled for now - IX false-triggers on main wire */
 #define INTERSECT_EXIT      100
 
 #define F_CPU 32000000UL
