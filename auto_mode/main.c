@@ -323,6 +323,14 @@ void main(void)
     }
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
+    /* Seed baseline from first reading so signal is relative to ambient */
+    left.baseline      = adc_read(ADC_CH_LEFT);
+    left.filtered      = left.baseline;
+    right.baseline     = adc_read(ADC_CH_RIGHT);
+    right.filtered     = right.baseline;
+    intersect.baseline = adc_read(ADC_CH_INTERSECT);
+    intersect.filtered = intersect.baseline;
+
     /* warm up */
     for (i = 0; i < 64; i++)
     {
