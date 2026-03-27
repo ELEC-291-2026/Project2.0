@@ -60,9 +60,7 @@ clean:
 Flash_Load: $(TARGET).hex
 ifeq ($(OS),Windows_NT)
 	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL 2>NUL
-	@echo .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 ^^>loadf.bat
-	@.\stm32flash\BO230\BO230.exe -b >>loadf.bat
-	@loadf.bat
+	@for /f %%P in ('.\stm32flash\BO230\BO230.exe -b') do .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 %%P
 else
 	@echo Flash_Load is only configured for the Windows stm32flash flow.
 endif
