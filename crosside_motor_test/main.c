@@ -171,19 +171,10 @@ void main(void)
 
     while (1)
     {
-        set_motor_outputs(600, 0);
-        delayms(3000);
-
-        set_motor_outputs(0, 0);
-        delayms(1000);
-
-        set_motor_outputs(0, 600);
-        delayms(3000);
-
-        set_motor_outputs(0, 0);
-        delayms(1000);
-
         set_motor_outputs(600, 600);
+        delayms(3000);
+
+        set_motor_outputs(-600, -600);
         delayms(3000);
 
         set_motor_outputs(0, 0);

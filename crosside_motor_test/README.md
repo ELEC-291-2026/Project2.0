@@ -12,12 +12,9 @@ Pin mapping:
 
 The test sequence in `main.c` is:
 
-1. Left motor only for 3 seconds
-2. Stop for 1 second
-3. Right motor only for 3 seconds
-4. Stop for 1 second
-5. Both motors forward for 3 seconds
-6. Stop for 2 seconds
+1. Both motors forward for 3 seconds
+2. Both motors backward for 3 seconds
+3. Stop for 2 seconds
 
 Build on macOS/Linux:
 
