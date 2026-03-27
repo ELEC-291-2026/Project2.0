@@ -289,6 +289,7 @@ void main (void)
 	// control var
 	float current_v[2] = {0,0};
 	int alternatingVolt = 0;
+	int counterNormalize = 0;
 	
 	TIMER0_Init();
 	TIMER2_Init();
@@ -315,6 +316,14 @@ void main (void)
     		quartSecFlag = 0;
     		overflow = 0;
     	}
+    	
+		if(BUTTON == 0)
+    	{
+    		buttonValue = 500;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    	}
     		
 	    if(LED_SENSOR == 0)
 	    {
@@ -325,14 +334,6 @@ void main (void)
 	            counterMS++;
 	            Timer3us(10);
 	        }
-	        
-	    	if(BUTTON == 0)
-	    	{
-	    		if(counterMS <= 1200)
-					normalized[0] = counterMS;
-				else if(counterMS <= 2000)
-					normalized[1] = counterMS;
-	    	}
 	        
 	        if(counterMS <= 500) {}
 	        else if(counterMS <= 1200)
@@ -362,6 +363,23 @@ void main (void)
 	        	printf("\rAUTOMODE                               ");
 	        	goto end;
 	        }
+	        
+	        else if(counterMS <=  4000)
+	    	{
+	    		counterNormalize = 3;
+	    	}
+	        
+	        if(counterNormalize > 0)
+	    	{
+	    		counterNormalize--;
+	    		if(counterMS <= 1200)
+					normalized[0] = counterMS;
+				else if(counterMS <= 2000)
+					normalized[1] = counterMS;
+	    	}
+	        
+	    	
+	    	
 	        printf("\r%5.2f ms %.0f x, %.0f y               ", counterMS/100, translated_v[0], translated_v[1]);
 	    }
 	    
