@@ -306,10 +306,23 @@ void main(void)
     pwm_init();
 
     /* --- startup motor test: spin both forward 1s then stop --- */
+    uart_puts("TIM2 CR1=");  uart_print_int((int)TIM2->CR1,  6);
+    uart_puts(" CCER=");     uart_print_int((int)TIM2->CCER, 6);
+    uart_puts(" ARR=");      uart_print_int((int)TIM2->ARR,  6);
+    uart_puts(" CNT=");      uart_print_int((int)TIM2->CNT,  6);
+    uart_puts("\r\n");
+
     uart_puts("Motor test...\r\n");
-    motors_set(400, 400);
+    TIM2->CCR1 = 400;
+    TIM2->CCR3 = 400;
+    delayms(100);
+    uart_puts("CCR1="); uart_print_int((int)TIM2->CCR1, 5);
+    uart_puts(" CCR3="); uart_print_int((int)TIM2->CCR3, 5);
+    uart_puts(" CNT=");  uart_print_int((int)TIM2->CNT,  5);
+    uart_puts("\r\n");
     delayms(1000);
-    motors_stop();
+    TIM2->CCR1 = 0;
+    TIM2->CCR3 = 0;
     delayms(500);
     uart_puts("Motor test done.\r\n");
 
