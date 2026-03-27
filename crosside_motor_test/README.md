@@ -12,8 +12,8 @@ Pin mapping:
 
 The test sequence in `main.c` is:
 
-1. Both motors forward for 3 seconds
-2. Both motors backward for 3 seconds
+1. Left `+600`, right `-600` for 3 seconds
+2. Left `-600`, right `+600` for 3 seconds
 3. Stop for 2 seconds
 
 Build on macOS/Linux:
@@ -35,8 +35,8 @@ Generated output:
 Notes:
 
 - The support files in `../Common` came from the course STM32L051 bundle.
-- The right motor command is inverted in software so positive left/right
-  commands drive the robot in the same overall direction.
+- This test uses opposite left/right command signs because the two motors
+  need opposite polarity to move the robot in the same overall direction.
 - If a motor spins backward, swap the motor wires or change the sign in
   `set_motor_outputs(...)`.
 - `makefile.mac` includes an optional `flash` target, but it expects a local

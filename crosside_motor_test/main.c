@@ -76,8 +76,6 @@ static unsigned int command_to_compare(int command)
 
 static void set_motor_outputs(int left_command, int right_command)
 {
-    int right_drive_command = -right_command;
-
     if (left_command > 0)
     {
         TIM2->CCR1 = command_to_compare(left_command);
@@ -94,15 +92,15 @@ static void set_motor_outputs(int left_command, int right_command)
         TIM2->CCR2 = 0;
     }
 
-    if (right_drive_command > 0)
+    if (right_command > 0)
     {
-        TIM2->CCR3 = command_to_compare(right_drive_command);
+        TIM2->CCR3 = command_to_compare(right_command);
         TIM2->CCR4 = 0;
     }
-    else if (right_drive_command < 0)
+    else if (right_command < 0)
     {
         TIM2->CCR3 = 0;
-        TIM2->CCR4 = command_to_compare(right_drive_command);
+        TIM2->CCR4 = command_to_compare(right_command);
     }
     else
     {
@@ -173,10 +171,10 @@ void main(void)
 
     while (1)
     {
-        set_motor_outputs(600, 600);
+        set_motor_outputs(600, -600);
         delayms(3000);
 
-        set_motor_outputs(-600, -600);
+        set_motor_outputs(-600, 600);
         delayms(3000);
 
         set_motor_outputs(0, 0);
