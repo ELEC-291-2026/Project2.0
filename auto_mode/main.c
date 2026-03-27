@@ -134,6 +134,9 @@ static void motors_stop(void)
 
 static void motors_set(int left, int right)
 {
+    /* right motor H-bridge inputs are wired in reverse, so negate */
+    right = -right;
+
     motors_stop();
     if (left > 0)
         TIM2->CCR1 = (unsigned int)(left  > MAX_PWM ? MAX_PWM : left);
