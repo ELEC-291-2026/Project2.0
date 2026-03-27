@@ -305,18 +305,19 @@ void main(void)
     uart_init();
     pwm_init();
 
-    uart_puts("=== TIM2 DIAGNOSTIC ===\r\n");
-    uart_puts("CR1 ="); uart_print_int((int)TIM2->CR1,  6); uart_puts("\r\n");
-    uart_puts("CCER="); uart_print_int((int)TIM2->CCER, 6); uart_puts("\r\n");
-    uart_puts("ARR ="); uart_print_int((int)TIM2->ARR,  6); uart_puts("\r\n");
-    uart_puts("=== SPINNING MOTORS ===\r\n");
     TIM2->CCR1 = 400;
     TIM2->CCR3 = 400;
-    uart_puts("CCR1="); uart_print_int((int)TIM2->CCR1, 6); uart_puts("\r\n");
-    uart_puts("CCR3="); uart_print_int((int)TIM2->CCR3, 6); uart_puts("\r\n");
-    uart_puts("CNT ="); uart_print_int((int)TIM2->CNT,  6); uart_puts("\r\n");
-    uart_puts("=== HALTED - check motors now ===\r\n");
-    while (1) {}
+    while (1)
+    {
+        uart_puts("CR1=");  uart_print_int((int)TIM2->CR1,  6);
+        uart_puts(" CCER="); uart_print_int((int)TIM2->CCER, 6);
+        uart_puts(" ARR=");  uart_print_int((int)TIM2->ARR,  6);
+        uart_puts(" CCR1="); uart_print_int((int)TIM2->CCR1, 6);
+        uart_puts(" CCR3="); uart_print_int((int)TIM2->CCR3, 6);
+        uart_puts(" CNT=");  uart_print_int((int)TIM2->CNT,  6);
+        uart_puts("\r\n");
+        delayms(1000);
+    }
 
     adc_init();
     motors_stop();
