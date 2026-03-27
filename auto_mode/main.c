@@ -1,8 +1,8 @@
 #include "stm32l051xx.h"
 
-#define ADC_CH_LEFT         10
-#define ADC_CH_RIGHT        11
-#define ADC_CH_INTERSECT    12
+#define ADC_CH_LEFT         4   /* PA4, physical pin 10 */
+#define ADC_CH_RIGHT        5   /* PA5, physical pin 11 */
+#define ADC_CH_INTERSECT    6   /* PA6, physical pin 12 */
 
 #define BASE_SPEED          600
 #define TURN_SPEED          500
@@ -148,10 +148,11 @@ static void motors_set(int left, int right)
 
 static void adc_init(void)
 {
-    RCC->IOPENR  |= (1 << 2);
+    RCC->IOPENR  |= (1 << 0);   /* GPIOA clock (shared with PWM) */
     RCC->APB2ENR |= (1 << 9);
 
-    GPIOC->MODER |= (3 << 0) | (3 << 2) | (3 << 4);
+    /* PA4, PA5, PA6 → analog mode */
+    GPIOA->MODER |= (3 << 8) | (3 << 10) | (3 << 12);
 
     ADC1->CFGR2 |= (1 << 30);
 
