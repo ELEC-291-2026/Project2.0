@@ -263,9 +263,9 @@ The standalone target currently assumes:
   - `PA3` -> TIM2_CH4
 
 - field detector ADC inputs:
-  - left tracker -> `PC0` -> ADC_IN10
-  - right tracker -> `PC1` -> ADC_IN11
-  - intersection detector -> `PC2` -> ADC_IN12
+  - left tracker -> `PA4` -> ADC_IN4
+  - right tracker -> `PA5` -> ADC_IN5
+  - intersection detector -> `PA6` -> ADC_IN6
 
 - collision detector:
   - `PA7` -> VL53L0X control pin

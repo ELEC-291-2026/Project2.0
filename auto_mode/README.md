@@ -84,9 +84,9 @@ Important behavior:
 Default standalone wiring placeholders:
 
 - Motor PWM: `PA0..PA3` on `TIM2_CH1..CH4`
-- Left tracker ADC: `PC0` / `ADC_IN10`
-- Right tracker ADC: `PC1` / `ADC_IN11`
-- Intersection ADC: `PC2` / `ADC_IN12`
+- Left tracker ADC: `PA4` / `ADC_IN4`
+- Right tracker ADC: `PA5` / `ADC_IN5`
+- Intersection ADC: `PA6` / `ADC_IN6`
 - Collision sensor control: `PA7`
 - VL53L0X I2C: `PB6` / `PB7`
 
