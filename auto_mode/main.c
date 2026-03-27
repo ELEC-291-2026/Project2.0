@@ -12,8 +12,8 @@
 
 #define ENTRY_SIGNAL        10
 #define EXIT_SIGNAL         5
-#define INTERSECT_ENTRY     20
-#define INTERSECT_EXIT      10
+#define INTERSECT_ENTRY     150
+#define INTERSECT_EXIT      100
 
 #define F_CPU 32000000UL
 
@@ -330,7 +330,6 @@ void main(void)
     motors_stop();
 
     delayms(500);
-    uart_puts("\x1b[2J\x1b[1;1H");
     uart_puts("Robot starting up...\r\n");
 
     /* --- raw ADC dump: print 20 readings before any filtering --- */
