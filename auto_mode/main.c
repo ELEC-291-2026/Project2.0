@@ -282,6 +282,8 @@ void main(void)
     int path;
     int ix_count;
     int ix_active;
+    int ix_timer;
+    int ix_sustain;
     unsigned int i;
     unsigned int loop;
 
@@ -300,6 +302,8 @@ void main(void)
     g_state   = ST_FOLLOW;
     g_action  = 0;
     loop      = 0;
+    ix_timer  = 0;
+    ix_sustain = 0;
 
     clock_init();
     uart_init();
@@ -362,6 +366,8 @@ void main(void)
             uart_puts(" s=");      uart_print_int(intersect.signal,   4);
             uart_puts(" d=");      uart_print_int(intersect.detected, 1);
             uart_puts(" | st=");   uart_print_int((int)g_state, 1);
+            uart_puts(" xt=");     uart_print_int(ix_timer, 3);
+            uart_puts(" xs=");     uart_print_int(ix_sustain, 1);
             uart_puts("\r\n");
         }
         loop++;
@@ -372,25 +378,39 @@ void main(void)
                 if (!left.detected && !right.detected)
                 {
                     motors_stop();
+                    ix_sustain = 0;
                     g_state = ST_LOST;
                     break;
                 }
-                if (intersect.detected && !ix_active)
+                if (intersect.detected)
+                    ix_sustain++;
+                else
                 {
-                    ix_active = 1;
-                    g_action  = (ix_count < 8) ? k_paths[path][ix_count++] : 3;
-                    g_state   = ST_INTERSECTION;
+                    ix_sustain = 0;
+                    ix_active  = 0;
+                }
+                /* require 3 consecutive IX detections before treating as intersection */
+                if (ix_sustain >= 3 && !ix_active)
+                {
+                    ix_active  = 1;
+                    ix_sustain = 0;
+                    ix_timer   = 0;
+                    g_action   = (ix_count < 8) ? k_paths[path][ix_count++] : 3;
+                    g_state    = ST_INTERSECTION;
                     run_action(g_action);
                     break;
                 }
-                if (!intersect.detected) ix_active = 0;
                 run_follow(left.signal, right.signal);
                 break;
 
             case ST_INTERSECTION:
-                if (!intersect.detected)
+                ix_timer++;
+                /* exit if IX signal drops OR we've been here > 200 loops (2s) */
+                if (!intersect.detected || ix_timer > 200)
                 {
-                    ix_active = 0;
+                    ix_active  = 0;
+                    ix_sustain = 0;
+                    ix_timer   = 0;
                     if (g_action == 3) { g_state = ST_STOP; motors_stop(); }
                     else               { g_state = ST_FOLLOW; }
                 }
