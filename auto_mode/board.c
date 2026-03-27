@@ -3,13 +3,16 @@
 enum
 {
     SYSCLK_HZ = 32000000UL,
-    PWM_PRESCALER = 31U,
+    SOFTWARE_PWM_TICK_HZ = 100000UL,
     PWM_PERIOD_COUNTS = 1000U,
     ADC_POWERUP_DELAY_CYCLES = 8000U
 };
 
 ADC_HandleTypeDef hadc1 = { ADC1, 0U };
 TIM_HandleTypeDef htim2 = { TIM2 };
+
+static volatile uint32_t g_motor_compare[4] = { 0U, 0U, 0U, 0U };
+static volatile uint32_t g_pwm_counter = 0U;
 
 static void wait_1ms(void)
 {
@@ -49,10 +52,10 @@ static void configure_motor_gpio_for_pwm(void)
         GPIO_MODER_MODE1 |
         GPIO_MODER_MODE2 |
         GPIO_MODER_MODE3);
-    GPIOA->MODER |= GPIO_MODER_MODE0_1 |
-        GPIO_MODER_MODE1_1 |
-        GPIO_MODER_MODE2_1 |
-        GPIO_MODER_MODE3_1;
+    GPIOA->MODER |= GPIO_MODER_MODE0_0 |
+        GPIO_MODER_MODE1_0 |
+        GPIO_MODER_MODE2_0 |
+        GPIO_MODER_MODE3_0;
 
     GPIOA->OTYPER &= ~(BIT0 | BIT1 | BIT2 | BIT3);
     GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEED0 |
@@ -63,42 +66,26 @@ static void configure_motor_gpio_for_pwm(void)
         GPIO_PUPDR_PUPD1 |
         GPIO_PUPDR_PUPD2 |
         GPIO_PUPDR_PUPD3);
-
-    GPIOA->AFR[0] &= ~0x0000ffffUL;
-    GPIOA->AFR[0] |= 0x00002222UL;
+    GPIOA->ODR &= ~(BIT0 | BIT1 | BIT2 | BIT3);
 }
 
 static void configure_tim2_pwm(void)
 {
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 
-    TIM2->PSC = PWM_PRESCALER;
-    TIM2->ARR = PWM_PERIOD_COUNTS - 1U;
+    TIM2->PSC = 0U;
+    TIM2->ARR = (SYSCLK_HZ / SOFTWARE_PWM_TICK_HZ) - 1U;
     TIM2->CCR1 = 0U;
     TIM2->CCR2 = 0U;
     TIM2->CCR3 = 0U;
     TIM2->CCR4 = 0U;
-
-    TIM2->CCMR1 = TIM_CCMR1_OC1PE |
-        TIM_CCMR1_OC1M_1 |
-        TIM_CCMR1_OC1M_2 |
-        TIM_CCMR1_OC2PE |
-        TIM_CCMR1_OC2M_1 |
-        TIM_CCMR1_OC2M_2;
-    TIM2->CCMR2 = TIM_CCMR2_OC3PE |
-        TIM_CCMR2_OC3M_1 |
-        TIM_CCMR2_OC3M_2 |
-        TIM_CCMR2_OC4PE |
-        TIM_CCMR2_OC4M_1 |
-        TIM_CCMR2_OC4M_2;
-
-    TIM2->CCER = TIM_CCER_CC1E |
-        TIM_CCER_CC2E |
-        TIM_CCER_CC3E |
-        TIM_CCER_CC4E;
+    TIM2->SR = 0U;
+    TIM2->DIER = TIM_DIER_UIE;
     TIM2->CR1 = TIM_CR1_ARPE;
     TIM2->EGR = TIM_EGR_UG;
+    NVIC->ISER[0] |= BIT15;
     TIM2->CR1 |= TIM_CR1_CEN;
+    __enable_irq();
 }
 
 static void configure_adc(void)
@@ -143,26 +130,81 @@ void __hal_tim_set_compare(TIM_HandleTypeDef *timer_handle,
     uint32_t channel,
     uint32_t compare)
 {
+    (void)timer_handle;
+
+    if (compare >= PWM_PERIOD_COUNTS)
+    {
+        compare = PWM_PERIOD_COUNTS - 1U;
+    }
+
     switch (channel)
     {
         case TIM_CHANNEL_1:
-            timer_handle->Instance->CCR1 = compare;
+            g_motor_compare[0] = compare;
             break;
 
         case TIM_CHANNEL_2:
-            timer_handle->Instance->CCR2 = compare;
+            g_motor_compare[1] = compare;
             break;
 
         case TIM_CHANNEL_3:
-            timer_handle->Instance->CCR3 = compare;
+            g_motor_compare[2] = compare;
             break;
 
         case TIM_CHANNEL_4:
-            timer_handle->Instance->CCR4 = compare;
+            g_motor_compare[3] = compare;
             break;
 
         default:
             break;
+    }
+}
+
+void TIM2_Handler(void)
+{
+    TIM2->SR &= ~TIM_SR_UIF;
+
+    if (g_motor_compare[0] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT0;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT0;
+    }
+
+    if (g_motor_compare[1] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT1;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT1;
+    }
+
+    if (g_motor_compare[2] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT2;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT2;
+    }
+
+    if (g_motor_compare[3] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT3;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT3;
+    }
+
+    ++g_pwm_counter;
+
+    if (g_pwm_counter >= PWM_PERIOD_COUNTS)
+    {
+        g_pwm_counter = 0U;
     }
 }
 
