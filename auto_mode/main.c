@@ -305,26 +305,27 @@ void main(void)
     uart_init();
     pwm_init();
 
-    /* --- startup motor test: spin both forward 1s then stop --- */
-    uart_puts("TIM2 CR1=");  uart_print_int((int)TIM2->CR1,  6);
-    uart_puts(" CCER=");     uart_print_int((int)TIM2->CCER, 6);
-    uart_puts(" ARR=");      uart_print_int((int)TIM2->ARR,  6);
-    uart_puts(" CNT=");      uart_print_int((int)TIM2->CNT,  6);
-    uart_puts("\r\n");
-
-    uart_puts("Motor test...\r\n");
+    /* --- TIM2 diagnostic --- */
+    uart_puts("=== TIM2 DIAGNOSTIC ===\r\n");
+    uart_puts("CR1 ="); uart_print_int((int)TIM2->CR1,   6); uart_puts("\r\n");
+    uart_puts("CCER="); uart_print_int((int)TIM2->CCER,  6); uart_puts("\r\n");
+    uart_puts("ARR ="); uart_print_int((int)TIM2->ARR,   6); uart_puts("\r\n");
+    uart_puts("CNT ="); uart_print_int((int)TIM2->CNT,   6); uart_puts("\r\n");
+    uart_puts("CCR1="); uart_print_int((int)TIM2->CCR1,  6); uart_puts("\r\n");
+    uart_puts("CCR3="); uart_print_int((int)TIM2->CCR3,  6); uart_puts("\r\n");
+    uart_puts("=== MOTOR TEST (3s) ===\r\n");
     TIM2->CCR1 = 400;
     TIM2->CCR3 = 400;
-    delayms(100);
-    uart_puts("CCR1="); uart_print_int((int)TIM2->CCR1, 5);
-    uart_puts(" CCR3="); uart_print_int((int)TIM2->CCR3, 5);
-    uart_puts(" CNT=");  uart_print_int((int)TIM2->CNT,  5);
-    uart_puts("\r\n");
-    delayms(1000);
+    delayms(500);
+    uart_puts("CCR1="); uart_print_int((int)TIM2->CCR1,  6); uart_puts("\r\n");
+    uart_puts("CCR3="); uart_print_int((int)TIM2->CCR3,  6); uart_puts("\r\n");
+    uart_puts("CNT ="); uart_print_int((int)TIM2->CNT,   6); uart_puts("\r\n");
+    /* hold here for 5 seconds so you can read the output */
+    delayms(5000);
     TIM2->CCR1 = 0;
     TIM2->CCR3 = 0;
-    delayms(500);
-    uart_puts("Motor test done.\r\n");
+    uart_puts("=== MOTOR TEST DONE ===\r\n");
+    delayms(2000);
 
     adc_init();
     motors_stop();
