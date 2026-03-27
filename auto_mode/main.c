@@ -310,6 +310,18 @@ void main(void)
     uart_puts("\x1b[2J\x1b[1;1H");
     uart_puts("Robot starting up...\r\n");
 
+    /* --- raw ADC dump: print 20 readings before any filtering --- */
+    uart_puts("--- RAW ADC DUMP (no filtering) ---\r\n");
+    for (i = 0; i < 20; i++)
+    {
+        uart_puts("L="); uart_print_int(adc_read(ADC_CH_LEFT),      4);
+        uart_puts("  R="); uart_print_int(adc_read(ADC_CH_RIGHT),   4);
+        uart_puts("  IX="); uart_print_int(adc_read(ADC_CH_INTERSECT), 4);
+        uart_puts("\r\n");
+        delayms(100);
+    }
+    uart_puts("--- END DUMP, starting warmup ---\r\n");
+
     /* warm up */
     for (i = 0; i < 64; i++)
     {
@@ -327,15 +339,20 @@ void main(void)
         update_ch(&right,     adc_read(ADC_CH_RIGHT),     ENTRY_SIGNAL,    EXIT_SIGNAL);
         update_ch(&intersect, adc_read(ADC_CH_INTERSECT), INTERSECT_ENTRY, INTERSECT_EXIT);
 
-        if (loop % 50 == 0)
+        if (loop % 5 == 0)
         {
-            uart_puts("L raw="); uart_print_int(left.raw,    4);
-            uart_puts(" sig=");  uart_print_int(left.signal, 4);
-            uart_puts(" det=");  uart_print_int(left.detected, 1);
-            uart_puts(" | R raw="); uart_print_int(right.raw,    4);
-            uart_puts(" sig=");     uart_print_int(right.signal, 4);
-            uart_puts(" det=");     uart_print_int(right.detected, 1);
-            uart_puts(" | state="); uart_print_int((int)g_state, 1);
+            uart_puts("L r="); uart_print_int(left.raw,      4);
+            uart_puts(" b=");  uart_print_int(left.baseline, 4);
+            uart_puts(" s=");  uart_print_int(left.signal,   4);
+            uart_puts(" d=");  uart_print_int(left.detected, 1);
+            uart_puts(" | R r="); uart_print_int(right.raw,      4);
+            uart_puts(" b=");     uart_print_int(right.baseline, 4);
+            uart_puts(" s=");     uart_print_int(right.signal,   4);
+            uart_puts(" d=");     uart_print_int(right.detected, 1);
+            uart_puts(" | IX r="); uart_print_int(intersect.raw,      4);
+            uart_puts(" s=");      uart_print_int(intersect.signal,   4);
+            uart_puts(" d=");      uart_print_int(intersect.detected, 1);
+            uart_puts(" | st=");   uart_print_int((int)g_state, 1);
             uart_puts("\r\n");
         }
         loop++;
