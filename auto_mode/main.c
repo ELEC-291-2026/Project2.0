@@ -7,8 +7,8 @@
 #define BASE_SPEED          600
 #define TURN_SPEED          500
 #define MAX_PWM             1000
-#define KP                  2
-#define DEADBAND            15
+#define KP                  1
+#define DEADBAND            50
 
 #define ENTRY_SIGNAL        10
 #define EXIT_SIGNAL         5
