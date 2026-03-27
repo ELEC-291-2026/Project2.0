@@ -31,6 +31,29 @@ static void delayms(unsigned int ms)
     while (ms--) wait_1ms();
 }
 
+static void clock_init(void)
+{
+    /* Enable HSI16 oscillator */
+    RCC->CR |= (1 << 0);
+    while (!(RCC->CR & (1 << 2)));
+
+    /* PLL: source=HSI16, MUL=×4, DIV=÷2 → 32 MHz */
+    RCC->CFGR &= ~((0xFU << 18) | (0x3U << 22) | (1U << 16));
+    RCC->CFGR |=  (0x1U << 18) |  /* MUL ×4 */
+                  (0x1U << 22);    /* DIV ÷2, SRC=HSI16 */
+
+    /* Enable PLL and wait */
+    RCC->CR |= (1 << 24);
+    while (!(RCC->CR & (1 << 25)));
+
+    /* 1 flash wait state required at 32 MHz */
+    FLASH->ACR |= (1 << 0);
+
+    /* Switch sysclk to PLL */
+    RCC->CFGR = (RCC->CFGR & ~0x3U) | 0x3U;
+    while ((RCC->CFGR & (0x3U << 2)) != (0x3U << 2));
+}
+
 static void uart_init(void)
 {
     /* Enable GPIOA and USART1 clocks */
@@ -277,6 +300,7 @@ void main(void)
     g_action  = 0;
     loop      = 0;
 
+    clock_init();
     uart_init();
     pwm_init();
     adc_init();
