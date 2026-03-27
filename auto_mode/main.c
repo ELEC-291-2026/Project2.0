@@ -10,8 +10,8 @@
 #define KP                  1
 #define DEADBAND            50
 
-#define ENTRY_SIGNAL        10
-#define EXIT_SIGNAL         5
+#define ENTRY_SIGNAL        200
+#define EXIT_SIGNAL         100
 #define INTERSECT_ENTRY     9999   /* disabled for now - IX false-triggers on main wire */
 #define INTERSECT_EXIT      100
 
@@ -330,13 +330,7 @@ void main(void)
     }
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
-    /* Seed baseline from first reading so signal is relative to ambient */
-    left.baseline      = adc_read(ADC_CH_LEFT);
-    left.filtered      = left.baseline;
-    right.baseline     = adc_read(ADC_CH_RIGHT);
-    right.filtered     = right.baseline;
-    intersect.baseline = adc_read(ADC_CH_INTERSECT);
-    intersect.filtered = intersect.baseline;
+    /* baseline stays 0 - signal is absolute field strength, not relative to ambient */
 
     /* warm up */
     for (i = 0; i < 64; i++)
