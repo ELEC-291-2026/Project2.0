@@ -1,6 +1,5 @@
 #include "stm32l051xx.h"
-/* #include "../Common/Include/serial.h" */
-/* #include <stdio.h> */
+#include <stdio.h>
 
 #define ADC_CH_LEFT         10
 #define ADC_CH_RIGHT        11
@@ -31,6 +30,34 @@ static void wait_1ms(void)
 static void delayms(unsigned int ms)
 {
     while (ms--) wait_1ms();
+}
+
+static void uart_init(void)
+{
+    /* Enable GPIOA and USART1 clocks */
+    RCC->IOPENR  |= (1 << 0);
+    RCC->APB2ENR |= (1 << 14);
+
+    /* PA9 = USART1_TX, AF4 */
+    GPIOA->MODER  &= ~(3U << 18);
+    GPIOA->MODER  |=  (2U << 18);
+    GPIOA->AFR[1] &= ~(0xFU << 4);
+    GPIOA->AFR[1] |=  (4U  << 4);
+
+    /* 115200 baud at 32 MHz */
+    USART1->BRR = 278;
+    USART1->CR1 = (1 << 3) | (1 << 0);  /* TE | UE */
+}
+
+static void uart_putc(char c)
+{
+    while (!(USART1->ISR & (1 << 7)));
+    USART1->TDR = (unsigned char)c;
+}
+
+static void uart_puts(const char *s)
+{
+    while (*s) uart_putc(*s++);
 }
 
 static void pwm_init(void)
@@ -234,13 +261,14 @@ void main(void)
     g_action  = 0;
     loop      = 0;
 
+    uart_init();
     pwm_init();
     adc_init();
     motors_stop();
 
     delayms(500);
-    /* printf("\x1b[2J\x1b[1;1H"); */
-    /* printf("Robot starting up...\r\n"); */
+    uart_puts("\x1b[2J\x1b[1;1H");
+    uart_puts("Robot starting up...\r\n");
 
     /* warm up */
     for (i = 0; i < 64; i++)
@@ -251,7 +279,7 @@ void main(void)
         delayms(2);
     }
 
-    /* printf("Warmup done. Entering main loop.\r\n"); */
+    uart_puts("Warmup done. Entering main loop.\r\n");
 
     while (1)
     {
@@ -259,14 +287,15 @@ void main(void)
         update_ch(&right,     adc_read(ADC_CH_RIGHT),     ENTRY_SIGNAL,    EXIT_SIGNAL);
         update_ch(&intersect, adc_read(ADC_CH_INTERSECT), INTERSECT_ENTRY, INTERSECT_EXIT);
 
-        /* if (loop % 50 == 0)
+        if (loop % 50 == 0)
         {
-            printf("L raw=%4d sig=%4d det=%d | R raw=%4d sig=%4d det=%d | state=%d\r\n",
+            char buf[96];
+            sprintf(buf, "L raw=%4d sig=%4d det=%d | R raw=%4d sig=%4d det=%d | state=%d\r\n",
                 left.raw,  left.signal,  left.detected,
                 right.raw, right.signal, right.detected,
                 (int)g_state);
-            fflush(stdout);
-        } */
+            uart_puts(buf);
+        }
         loop++;
 
         switch (g_state)
