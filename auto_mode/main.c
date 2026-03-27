@@ -1,5 +1,4 @@
 #include "stm32l051xx.h"
-#include <stdio.h>
 
 #define ADC_CH_LEFT         10
 #define ADC_CH_RIGHT        11
@@ -58,6 +57,23 @@ static void uart_putc(char c)
 static void uart_puts(const char *s)
 {
     while (*s) uart_putc(*s++);
+}
+
+/* Print a signed integer right-justified in a field of `width` chars */
+static void uart_print_int(int val, int width)
+{
+    char buf[12];
+    int  len = 0;
+    unsigned int uval;
+
+    if (val < 0) { uart_putc('-'); uval = (unsigned int)(-val); width--; }
+    else         { uval = (unsigned int)val; }
+
+    if (uval == 0) { buf[len++] = '0'; }
+    else { while (uval) { buf[len++] = '0' + (int)(uval % 10); uval /= 10; } }
+
+    while (len < width) { uart_putc(' '); width--; }
+    while (len > 0) uart_putc(buf[--len]);
 }
 
 static void pwm_init(void)
@@ -289,12 +305,14 @@ void main(void)
 
         if (loop % 50 == 0)
         {
-            char buf[96];
-            sprintf(buf, "L raw=%4d sig=%4d det=%d | R raw=%4d sig=%4d det=%d | state=%d\r\n",
-                left.raw,  left.signal,  left.detected,
-                right.raw, right.signal, right.detected,
-                (int)g_state);
-            uart_puts(buf);
+            uart_puts("L raw="); uart_print_int(left.raw,    4);
+            uart_puts(" sig=");  uart_print_int(left.signal, 4);
+            uart_puts(" det=");  uart_print_int(left.detected, 1);
+            uart_puts(" | R raw="); uart_print_int(right.raw,    4);
+            uart_puts(" sig=");     uart_print_int(right.signal, 4);
+            uart_puts(" det=");     uart_print_int(right.detected, 1);
+            uart_puts(" | state="); uart_print_int((int)g_state, 1);
+            uart_puts("\r\n");
         }
         loop++;
 
