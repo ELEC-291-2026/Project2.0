@@ -338,14 +338,28 @@ void main (void)
 	        else if(counterMS <= 1200)
 	        {
 	        	translated_v[0] = counterMS - normalized[0];
+	        	
+	        	if(translated_v[0] >=118)
+	        		translated_v[0] = 120;
+	        	else if(translated_v[0] <= -118)
+	        		translated_v[0] = -120;
+	        	else if(translated_v[0] <= 3 && translated_v[0] >= -3)
+	        		translated_v[0] = 0;
 	        }
 	        else if(counterMS <=  2000)
 	        {
 	        	translated_v[1] = counterMS - normalized[1];
+	        	
+	        	if(translated_v[1] >=118)
+	        		translated_v[1] = 120;
+	        	else if(translated_v[1] <= -118)
+	        		translated_v[1] = -120;
+	        	else if(translated_v[1] <= 3 && translated_v[1] >= -3)
+	        		translated_v[1] = 0;
 	        }
 	        else if(counterMS <=  3400)
 	        {
-	        	printf("\rAUTOMODE                      ");
+	        	printf("\rAUTOMODE                               ");
 	        	goto end;
 	        }
 	        printf("\r%5.2f ms %.0f x, %.0f y               ", counterMS/100, translated_v[0], translated_v[1]);
