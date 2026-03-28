@@ -411,4 +411,31 @@ void main (void)
 }
 
 
+
+
+
+
+
+
+
+void wait_1us(void)
+{
+    // For SysTick info check the STM32L0xxx Cortex-M0 programming manual
+    // Load for 1 microsecond: (F_CPU / 1,000,000) - 1
+    SysTick->LOAD = (F_CPU/1000000L) - 1;  
+    SysTick->VAL = 0; 
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk; 
+    
+    // Wait for the COUNTFLAG (Bit 16) to be set
+    while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0); 
+    
+    SysTick->CTRL = 0; // Disable Systick counter
+}
+
+void waitus(int len)
+{
+    while(len--) wait_1us();
+}
+
+
  
