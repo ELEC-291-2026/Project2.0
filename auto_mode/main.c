@@ -21,8 +21,13 @@
 #define LEFT_MOTOR_SIGN     -1
 #define RIGHT_MOTOR_SIGN    -1
 
+#define SOFTWARE_PWM_TICK_HZ 100000UL
+#define PWM_PERIOD_COUNTS   1000U
+
 static int g_last_left_command;
 static int g_last_right_command;
+static volatile unsigned int g_motor_compare[4];
+static volatile unsigned int g_pwm_counter;
 
 static void wait_1ms(void)
 {
@@ -149,32 +154,87 @@ static void pwm_init(void)
     RCC->IOPENR |= (1U << 0U);
     RCC->APB1ENR |= (1U << 0U);
 
-    GPIOA->MODER &= ~(0xFFU);
-    GPIOA->MODER |= 0xAAU;
+    GPIOA->MODER &= ~(GPIO_MODER_MODE0 |
+        GPIO_MODER_MODE1 |
+        GPIO_MODER_MODE2 |
+        GPIO_MODER_MODE3);
+    GPIOA->MODER |= GPIO_MODER_MODE0_0 |
+        GPIO_MODER_MODE1_0 |
+        GPIO_MODER_MODE2_0 |
+        GPIO_MODER_MODE3_0;
 
-    GPIOA->AFR[0] &= ~(0xFFFFU);
-    GPIOA->AFR[0] |= 0x2222U;
+    GPIOA->OTYPER &= ~(BIT0 | BIT1 | BIT2 | BIT3);
+    GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEED0 |
+        GPIO_OSPEEDER_OSPEED1 |
+        GPIO_OSPEEDER_OSPEED2 |
+        GPIO_OSPEEDER_OSPEED3;
+    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD0 |
+        GPIO_PUPDR_PUPD1 |
+        GPIO_PUPDR_PUPD2 |
+        GPIO_PUPDR_PUPD3);
+    GPIOA->ODR &= ~(BIT0 | BIT1 | BIT2 | BIT3);
 
-    TIM2->PSC = 31U;
-    TIM2->ARR = MAX_PWM - 1U;
-    TIM2->CCR1 = 0U;
-    TIM2->CCR2 = 0U;
-    TIM2->CCR3 = 0U;
-    TIM2->CCR4 = 0U;
+    g_motor_compare[0] = 0U;
+    g_motor_compare[1] = 0U;
+    g_motor_compare[2] = 0U;
+    g_motor_compare[3] = 0U;
+    g_pwm_counter = 0U;
 
-    TIM2->CCMR1 = (6U << 4U) | (1U << 3U) | (6U << 12U) | (1U << 11U);
-    TIM2->CCMR2 = (6U << 4U) | (1U << 3U) | (6U << 12U) | (1U << 11U);
-    TIM2->CCER = (1U << 0U) | (1U << 4U) | (1U << 8U) | (1U << 12U);
+    TIM2->PSC = 0U;
+    TIM2->ARR = (F_CPU / SOFTWARE_PWM_TICK_HZ) - 1U;
+    TIM2->SR = 0U;
+    TIM2->DIER = TIM_DIER_UIE;
+    TIM2->CR1 = TIM_CR1_ARPE;
     TIM2->EGR = 1U;
-    TIM2->CR1 = (1U << 7U) | (1U << 0U);
+    NVIC->ISER[0] |= BIT15;
+    TIM2->CR1 |= TIM_CR1_CEN;
+    __enable_irq();
+}
+
+static unsigned int clamp_command(int command)
+{
+    unsigned int magnitude;
+
+    if (command < 0)
+    {
+        magnitude = (unsigned int)(-command);
+    }
+    else
+    {
+        magnitude = (unsigned int)command;
+    }
+
+    if (magnitude > (unsigned int)MAX_PWM)
+    {
+        magnitude = (unsigned int)MAX_PWM;
+    }
+
+    return magnitude;
+}
+
+static unsigned int command_to_compare(int command)
+{
+    unsigned int compare;
+    unsigned int magnitude;
+
+    magnitude = clamp_command(command);
+    compare = (magnitude * PWM_PERIOD_COUNTS) / (unsigned int)MAX_PWM;
+
+    if (compare >= PWM_PERIOD_COUNTS)
+    {
+        compare = PWM_PERIOD_COUNTS - 1U;
+    }
+
+    return compare;
 }
 
 static void motors_stop(void)
 {
-    TIM2->CCR1 = 0U;
-    TIM2->CCR2 = 0U;
-    TIM2->CCR3 = 0U;
-    TIM2->CCR4 = 0U;
+    g_motor_compare[0] = 0U;
+    g_motor_compare[1] = 0U;
+    g_motor_compare[2] = 0U;
+    g_motor_compare[3] = 0U;
+    GPIOA->ODR &= ~(BIT0 | BIT1 | BIT2 | BIT3);
     g_last_left_command = 0;
     g_last_right_command = 0;
 }
@@ -187,27 +247,75 @@ static void motors_set(int left, int right)
     left *= LEFT_MOTOR_SIGN;
     right *= RIGHT_MOTOR_SIGN;
 
-    TIM2->CCR1 = 0U;
-    TIM2->CCR2 = 0U;
-    TIM2->CCR3 = 0U;
-    TIM2->CCR4 = 0U;
+    g_motor_compare[0] = 0U;
+    g_motor_compare[1] = 0U;
+    g_motor_compare[2] = 0U;
+    g_motor_compare[3] = 0U;
 
     if (left > 0)
     {
-        TIM2->CCR1 = (unsigned int)(left > MAX_PWM ? MAX_PWM : left);
+        g_motor_compare[0] = command_to_compare(left);
     }
     else if (left < 0)
     {
-        TIM2->CCR2 = (unsigned int)((-left) > MAX_PWM ? MAX_PWM : -left);
+        g_motor_compare[1] = command_to_compare(left);
     }
 
     if (right > 0)
     {
-        TIM2->CCR3 = (unsigned int)(right > MAX_PWM ? MAX_PWM : right);
+        g_motor_compare[2] = command_to_compare(right);
     }
     else if (right < 0)
     {
-        TIM2->CCR4 = (unsigned int)((-right) > MAX_PWM ? MAX_PWM : -right);
+        g_motor_compare[3] = command_to_compare(right);
+    }
+}
+
+void TIM2_Handler(void)
+{
+    TIM2->SR &= ~TIM_SR_UIF;
+
+    if (g_motor_compare[0] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT0;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT0;
+    }
+
+    if (g_motor_compare[1] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT1;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT1;
+    }
+
+    if (g_motor_compare[2] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT2;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT2;
+    }
+
+    if (g_motor_compare[3] > g_pwm_counter)
+    {
+        GPIOA->ODR |= BIT3;
+    }
+    else
+    {
+        GPIOA->ODR &= ~BIT3;
+    }
+
+    ++g_pwm_counter;
+
+    if (g_pwm_counter >= PWM_PERIOD_COUNTS)
+    {
+        g_pwm_counter = 0U;
     }
 }
 
