@@ -3,6 +3,7 @@
   "configurations": [
     {
       "name": "C/C++ Runner: Debug Session",
+<<<<<<< HEAD
       "type": "cppdbg",
       "request": "launch",
       "args": [],
@@ -19,6 +20,13 @@
           "ignoreFailures": true
         }
       ]
+=======
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/zhuguanyu/Documents/Project2.0",
+      "program": "/Users/zhuguanyu/Documents/Project2.0/build/Debug/outDebug"
+>>>>>>> da5f92add779070e63818f9909af52e7a5a8702f
     }
   ]
 }
