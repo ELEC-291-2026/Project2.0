@@ -64,6 +64,19 @@ Flash_Load: $(TARGET).hex
 ifeq ($(OS),Windows_NT)
 	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL 2>NUL
 	@for /f %%P in ('.\stm32flash\BO230\BO230.exe -b') do .\stm32flash\stm32flash.exe -w $(TARGET).hex -v -g 0x0 %%P
+	@echo cmd /c start putty.exe -sercfg 115200,8,n,1,N -serial ^^>sputty.bat
+	@.\stm32flash\BO230\BO230.exe -r >>sputty.bat
+	@sputty
 else
 	@echo Flash_Load is only configured for the Windows stm32flash flow.
+endif
+
+putty:
+ifeq ($(OS),Windows_NT)
+	@taskkill /f /im putty.exe /t /fi "status eq running" > NUL 2>NUL
+	@echo cmd /c start putty.exe -sercfg 115200,8,n,1,N -serial ^^>sputty.bat
+	@.\stm32flash\BO230\BO230.exe -r >>sputty.bat
+	@sputty
+else
+	@echo putty is only configured for the Windows serial flow.
 endif
