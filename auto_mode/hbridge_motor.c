@@ -38,6 +38,8 @@ static const hbridge_pwm_channel_t k_right_reverse =
     HBRIDGE_RIGHT_REVERSE_CHANNEL
 };
 
+static motor_command_t g_last_command = { 0, 0 };
+
 static unsigned int command_magnitude(int command)
 {
     if (command < 0)
@@ -114,6 +116,8 @@ void hbridge_motor_stop_all(void)
 {
     motor_apply_single(&k_left_forward, &k_left_reverse, 0);
     motor_apply_single(&k_right_forward, &k_right_reverse, 0);
+    g_last_command.left_command = 0;
+    g_last_command.right_command = 0;
 }
 
 void hbridge_motor_apply(const motor_command_t *command)
@@ -124,6 +128,14 @@ void hbridge_motor_apply(const motor_command_t *command)
         return;
     }
 
+    g_last_command.left_command = command->left_command;
+    g_last_command.right_command = command->right_command;
+
     motor_apply_single(&k_left_forward, &k_left_reverse, command->left_command);
     motor_apply_single(&k_right_forward, &k_right_reverse, command->right_command);
+}
+
+motor_command_t hbridge_motor_get_last_command(void)
+{
+    return g_last_command;
 }
