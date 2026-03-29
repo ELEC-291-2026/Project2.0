@@ -8,6 +8,7 @@
 #define TURN_SPEED          260
 #define MAX_PWM             1000
 #define KP                  1
+#define KD                  2
 #define DEADBAND            35
 
 #define ENTRY_SIGNAL        200
@@ -32,6 +33,7 @@
 
 static int g_last_left_command;
 static int g_last_right_command;
+static int g_prev_error;
 static volatile unsigned int g_motor_compare[4];
 static volatile unsigned int g_pwm_counter;
 
@@ -273,6 +275,7 @@ static void motors_stop(void)
     set_motor_pin(BIT3, 0);
     g_last_left_command = 0;
     g_last_right_command = 0;
+    g_prev_error = 0;
 }
 
 static void motors_set(int left, int right)
@@ -586,6 +589,7 @@ static void run_action(int action)
 static void run_follow(int left_sig, int right_sig)
 {
     int error;
+    int derivative;
     int correction;
     int left_command;
     int right_command;
@@ -596,7 +600,10 @@ static void run_follow(int left_sig, int right_sig)
         error = 0;
     }
 
-    correction = KP * error;
+    derivative = error - g_prev_error;
+    g_prev_error = error;
+
+    correction = (KP * error) + (KD * derivative);
     correction = clamp_value(correction, -MAX_CORRECTION, MAX_CORRECTION);
 
     left_command = clamp_value(BASE_SPEED - correction, MIN_FORWARD_SPEED, MAX_FORWARD_SPEED);
@@ -607,6 +614,8 @@ static void run_follow(int left_sig, int right_sig)
 
 static void run_single_sensor_follow(int left_detected, int right_detected)
 {
+    g_prev_error = 0;
+
     if (left_detected && !right_detected)
     {
         motors_set(SEARCH_SLOW_SPEED, SEARCH_FAST_SPEED);
@@ -663,6 +672,7 @@ void main(void)
     g_action = 0;
     g_last_left_command = 0;
     g_last_right_command = 0;
+    g_prev_error = 0;
     line_acquire_count = 0U;
     loop = 0U;
     ix_timer = 0;
