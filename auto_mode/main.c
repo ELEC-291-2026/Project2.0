@@ -20,6 +20,7 @@
 
 #define LEFT_MOTOR_SIGN     -1
 #define RIGHT_MOTOR_SIGN    -1
+#define MOTOR_OUTPUT_ACTIVE_LOW 1
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
 #define PWM_PERIOD_COUNTS   1000U
@@ -28,6 +29,29 @@ static int g_last_left_command;
 static int g_last_right_command;
 static volatile unsigned int g_motor_compare[4];
 static volatile unsigned int g_pwm_counter;
+
+static void set_motor_pin(unsigned int bit_mask, int active)
+{
+#if MOTOR_OUTPUT_ACTIVE_LOW
+    if (active)
+    {
+        GPIOA->ODR &= ~bit_mask;
+    }
+    else
+    {
+        GPIOA->ODR |= bit_mask;
+    }
+#else
+    if (active)
+    {
+        GPIOA->ODR |= bit_mask;
+    }
+    else
+    {
+        GPIOA->ODR &= ~bit_mask;
+    }
+#endif
+}
 
 static void wait_1ms(void)
 {
@@ -172,7 +196,11 @@ static void pwm_init(void)
         GPIO_PUPDR_PUPD1 |
         GPIO_PUPDR_PUPD2 |
         GPIO_PUPDR_PUPD3);
+#if MOTOR_OUTPUT_ACTIVE_LOW
+    GPIOA->ODR |= BIT0 | BIT1 | BIT2 | BIT3;
+#else
     GPIOA->ODR &= ~(BIT0 | BIT1 | BIT2 | BIT3);
+#endif
 
     g_motor_compare[0] = 0U;
     g_motor_compare[1] = 0U;
@@ -234,7 +262,10 @@ static void motors_stop(void)
     g_motor_compare[1] = 0U;
     g_motor_compare[2] = 0U;
     g_motor_compare[3] = 0U;
-    GPIOA->ODR &= ~(BIT0 | BIT1 | BIT2 | BIT3);
+    set_motor_pin(BIT0, 0);
+    set_motor_pin(BIT1, 0);
+    set_motor_pin(BIT2, 0);
+    set_motor_pin(BIT3, 0);
     g_last_left_command = 0;
     g_last_right_command = 0;
 }
@@ -275,41 +306,10 @@ void TIM2_Handler(void)
 {
     TIM2->SR &= ~TIM_SR_UIF;
 
-    if (g_motor_compare[0] > g_pwm_counter)
-    {
-        GPIOA->ODR |= BIT0;
-    }
-    else
-    {
-        GPIOA->ODR &= ~BIT0;
-    }
-
-    if (g_motor_compare[1] > g_pwm_counter)
-    {
-        GPIOA->ODR |= BIT1;
-    }
-    else
-    {
-        GPIOA->ODR &= ~BIT1;
-    }
-
-    if (g_motor_compare[2] > g_pwm_counter)
-    {
-        GPIOA->ODR |= BIT2;
-    }
-    else
-    {
-        GPIOA->ODR &= ~BIT2;
-    }
-
-    if (g_motor_compare[3] > g_pwm_counter)
-    {
-        GPIOA->ODR |= BIT3;
-    }
-    else
-    {
-        GPIOA->ODR &= ~BIT3;
-    }
+    set_motor_pin(BIT0, g_motor_compare[0] > g_pwm_counter);
+    set_motor_pin(BIT1, g_motor_compare[1] > g_pwm_counter);
+    set_motor_pin(BIT2, g_motor_compare[2] > g_pwm_counter);
+    set_motor_pin(BIT3, g_motor_compare[3] > g_pwm_counter);
 
     ++g_pwm_counter;
 
