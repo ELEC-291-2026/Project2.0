@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "main.h"
 #include "collision_detector.h"
 #include "debug_uart.h"
@@ -10,7 +12,7 @@ enum
     AUTO_MODE_DEFAULT_PATH = PATH_ID_1,
     AUTO_MODE_SENSOR_WARMUP_SAMPLES = 64,
     AUTO_MODE_LOOP_DELAY_MS = 10,
-    AUTO_MODE_TELEMETRY_PERIOD_LOOPS = 10
+    AUTO_MODE_TELEMETRY_PERIOD_LOOPS = 50
 };
 
 static void warm_up_field_sensors(field_data_t *sensors)
@@ -28,14 +30,12 @@ static void warm_up_field_sensors(field_data_t *sensors)
 
 static void write_sensor_value(const char *label, int value)
 {
-    debug_uart_write_string(label);
-    debug_uart_write_int(value);
+    printf("%s%d", label, value);
 }
 
 static void write_detector_flag(const char *label, int value)
 {
-    debug_uart_write_string(label);
-    debug_uart_write_uint((unsigned int)(value != 0));
+    printf("%s%u", label, (unsigned int)(value != 0));
 }
 
 static const char *motor_movement_label(const motor_command_t *command)
@@ -109,32 +109,31 @@ static void write_field_telemetry(const field_data_t *sensors,
     motor_command_t motor_command = hbridge_motor_get_last_command();
 
     write_sensor_value("Lraw=", sensors->left_raw);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_sensor_value("Rraw=", sensors->right_raw);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_sensor_value("Xraw=", sensors->intersection_raw);
-    debug_uart_write_string(" | ");
+    printf(" | ");
     write_sensor_value("Lsig=", sensors->left_signal);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_sensor_value("Rsig=", sensors->right_signal);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_sensor_value("Xsig=", sensors->intersection_signal);
-    debug_uart_write_string(" | ");
+    printf(" | ");
     write_detector_flag("Ld=", sensors->left_detected);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_detector_flag("Rd=", sensors->right_detected);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_detector_flag("Xd=", sensors->intersection_detected);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_detector_flag("Obs=", collision->obstacle_detected);
-    debug_uart_write_string(" | ");
-    debug_uart_write_string("Move=");
-    debug_uart_write_string(motor_movement_label(&motor_command));
-    debug_uart_write_string(" ");
+    printf(" | ");
+    printf("Move=%s ", motor_movement_label(&motor_command));
     write_sensor_value("Lcmd=", motor_command.left_command);
-    debug_uart_write_string(" ");
+    printf(" ");
     write_sensor_value("Rcmd=", motor_command.right_command);
-    debug_uart_write_string("\r\n");
+    printf("\r\n");
+    fflush(stdout);
 }
 
 void main(void)
@@ -146,11 +145,13 @@ void main(void)
 
     board_init();
     debug_uart_init();
+    setvbuf(stdout, 0, _IONBF, 0);
     field_sensor_adc_init();
     hbridge_motor_init();
 
-    debug_uart_write_string("\r\nAuto mode field detector telemetry\r\n");
-    debug_uart_write_string("USART1 on PA9/PA10 at 115200 baud\r\n");
+    printf("\r\nAuto mode field detector telemetry\r\n");
+    printf("USART1 on PA9/PA10 at 115200 baud\r\n");
+    fflush(stdout);
 
     field_sensor_reset(&sensors);
     collision_detector_init(&collision);
