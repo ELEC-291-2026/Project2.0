@@ -4,17 +4,22 @@
 #define ADC_CH_RIGHT        5
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          600
-#define TURN_SPEED          500
+#define BASE_SPEED          260
+#define TURN_SPEED          260
 #define MAX_PWM             1000
 #define KP                  1
-#define DEADBAND            50
+#define DEADBAND            20
 
 #define ENTRY_SIGNAL        200
 #define EXIT_SIGNAL         100
 #define INTERSECT_ENTRY     9999
 #define INTERSECT_EXIT      100
-#define TRACK_ACQUIRE_COUNT 8
+#define TRACK_ACQUIRE_COUNT 3
+#define SEARCH_SLOW_SPEED   170
+#define SEARCH_FAST_SPEED   250
+#define MIN_FORWARD_SPEED   120
+#define MAX_FORWARD_SPEED   360
+#define MAX_CORRECTION      140
 
 #define F_CPU 32000000UL
 
@@ -392,6 +397,21 @@ static int absdiff(int a, int b)
     return (a > b) ? (a - b) : (b - a);
 }
 
+static int clamp_value(int value, int lower, int upper)
+{
+    if (value < lower)
+    {
+        return lower;
+    }
+
+    if (value > upper)
+    {
+        return upper;
+    }
+
+    return value;
+}
+
 static void update_ch(sensor_ch_t *ch, int sample, int entry, int exit_sig)
 {
     int filt;
@@ -567,6 +587,8 @@ static void run_follow(int left_sig, int right_sig)
 {
     int error;
     int correction;
+    int left_command;
+    int right_command;
 
     error = left_sig - right_sig;
     if (error > -DEADBAND && error < DEADBAND)
@@ -575,7 +597,28 @@ static void run_follow(int left_sig, int right_sig)
     }
 
     correction = KP * error;
-    motors_set(BASE_SPEED - correction, BASE_SPEED + correction);
+    correction = clamp_value(correction, -MAX_CORRECTION, MAX_CORRECTION);
+
+    left_command = clamp_value(BASE_SPEED - correction, MIN_FORWARD_SPEED, MAX_FORWARD_SPEED);
+    right_command = clamp_value(BASE_SPEED + correction, MIN_FORWARD_SPEED, MAX_FORWARD_SPEED);
+
+    motors_set(left_command, right_command);
+}
+
+static void run_single_sensor_follow(int left_detected, int right_detected)
+{
+    if (left_detected && !right_detected)
+    {
+        motors_set(SEARCH_SLOW_SPEED, SEARCH_FAST_SPEED);
+    }
+    else if (right_detected && !left_detected)
+    {
+        motors_set(SEARCH_FAST_SPEED, SEARCH_SLOW_SPEED);
+    }
+    else
+    {
+        motors_stop();
+    }
 }
 
 void main(void)
@@ -720,6 +763,14 @@ void main(void)
                     break;
                 }
 
+                if (!(left.detected && right.detected))
+                {
+                    ix_sustain = 0;
+                    ix_active = 0;
+                    run_single_sensor_follow(left.detected, right.detected);
+                    break;
+                }
+
                 if (intersect.detected)
                 {
                     ++ix_sustain;
@@ -770,7 +821,7 @@ void main(void)
                 break;
 
             case ST_LOST:
-                if (left.detected || right.detected)
+                if (left.detected && right.detected)
                 {
                     if (line_acquire_count < TRACK_ACQUIRE_COUNT)
                     {
@@ -789,7 +840,7 @@ void main(void)
                 }
                 else
                 {
-                    motors_stop();
+                    run_single_sensor_follow(left.detected, right.detected);
                 }
                 break;
 
