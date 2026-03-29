@@ -14,8 +14,15 @@
 #define EXIT_SIGNAL         100
 #define INTERSECT_ENTRY     9999
 #define INTERSECT_EXIT      100
+#define TRACK_ACQUIRE_COUNT 8
 
 #define F_CPU 32000000UL
+
+#define LEFT_MOTOR_SIGN     -1
+#define RIGHT_MOTOR_SIGN    -1
+
+static int g_last_left_command;
+static int g_last_right_command;
 
 static void wait_1ms(void)
 {
@@ -168,13 +175,22 @@ static void motors_stop(void)
     TIM2->CCR2 = 0U;
     TIM2->CCR3 = 0U;
     TIM2->CCR4 = 0U;
+    g_last_left_command = 0;
+    g_last_right_command = 0;
 }
 
 static void motors_set(int left, int right)
 {
-    right = -right;
+    g_last_left_command = left;
+    g_last_right_command = right;
 
-    motors_stop();
+    left *= LEFT_MOTOR_SIGN;
+    right *= RIGHT_MOTOR_SIGN;
+
+    TIM2->CCR1 = 0U;
+    TIM2->CCR2 = 0U;
+    TIM2->CCR3 = 0U;
+    TIM2->CCR4 = 0U;
 
     if (left > 0)
     {
@@ -333,6 +349,90 @@ static const int k_paths[3][8] =
 static state_t g_state;
 static int g_action;
 
+static const char *state_name(state_t state)
+{
+    switch (state)
+    {
+        case ST_FOLLOW:
+            return "FOLLOW";
+
+        case ST_INTERSECTION:
+            return "INTERSECTION";
+
+        case ST_LOST:
+            return "LOST";
+
+        case ST_STOP:
+        default:
+            return "STOP";
+    }
+}
+
+static const char *movement_name(int left, int right)
+{
+    if (left == 0 && right == 0)
+    {
+        return "STOP";
+    }
+
+    if (left > 0 && right > 0)
+    {
+        if (left == right)
+        {
+            return "FORWARD";
+        }
+
+        if (left > right)
+        {
+            return "VEER_RIGHT";
+        }
+
+        return "VEER_LEFT";
+    }
+
+    if (left < 0 && right < 0)
+    {
+        if (left == right)
+        {
+            return "REVERSE";
+        }
+
+        if (left < right)
+        {
+            return "REV_RIGHT";
+        }
+
+        return "REV_LEFT";
+    }
+
+    if (left < 0 && right > 0)
+    {
+        return "TURN_LEFT";
+    }
+
+    if (left > 0 && right < 0)
+    {
+        return "TURN_RIGHT";
+    }
+
+    if (left == 0)
+    {
+        if (right > 0)
+        {
+            return "PIVOT_LEFT";
+        }
+
+        return "PIVOT_RIGHT";
+    }
+
+    if (left > 0)
+    {
+        return "ARC_RIGHT";
+    }
+
+    return "ARC_LEFT";
+}
+
 static void run_action(int action)
 {
     switch (action)
@@ -380,6 +480,7 @@ void main(void)
     int ix_active;
     int ix_timer;
     int ix_sustain;
+    unsigned int line_acquire_count;
     unsigned int i;
     unsigned int loop;
 
@@ -407,8 +508,11 @@ void main(void)
     path = 0;
     ix_count = 0;
     ix_active = 0;
-    g_state = ST_FOLLOW;
+    g_state = ST_LOST;
     g_action = 0;
+    g_last_left_command = 0;
+    g_last_right_command = 0;
+    line_acquire_count = 0U;
     loop = 0U;
     ix_timer = 0;
     ix_sustain = 0;
@@ -478,11 +582,19 @@ void main(void)
             uart_puts(" d=");
             uart_print_int(intersect.detected, 1);
             uart_puts(" | st=");
-            uart_print_int((int)g_state, 1);
+            uart_puts(state_name(g_state));
+            uart_puts(" dir=");
+            uart_puts(movement_name(g_last_left_command, g_last_right_command));
+            uart_puts(" lc=");
+            uart_print_int(g_last_left_command, 4);
+            uart_puts(" rc=");
+            uart_print_int(g_last_right_command, 4);
             uart_puts(" xt=");
             uart_print_int(ix_timer, 3);
             uart_puts(" xs=");
             uart_print_int(ix_sustain, 1);
+            uart_puts(" la=");
+            uart_print_int((int)line_acquire_count, 2);
             uart_puts("\r\n");
         }
 
@@ -495,6 +607,7 @@ void main(void)
                 {
                     motors_stop();
                     ix_sustain = 0;
+                    line_acquire_count = 0U;
                     g_state = ST_LOST;
                     break;
                 }
@@ -550,6 +663,18 @@ void main(void)
 
             case ST_LOST:
                 if (left.detected || right.detected)
+                {
+                    if (line_acquire_count < TRACK_ACQUIRE_COUNT)
+                    {
+                        ++line_acquire_count;
+                    }
+                }
+                else
+                {
+                    line_acquire_count = 0U;
+                }
+
+                if (line_acquire_count >= TRACK_ACQUIRE_COUNT)
                 {
                     g_state = ST_FOLLOW;
                     run_follow(left.signal, right.signal);
