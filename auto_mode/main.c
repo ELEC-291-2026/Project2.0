@@ -8,7 +8,7 @@
 #define TURN_SPEED          260
 #define MAX_PWM             1000
 #define KP                  1
-#define DEADBAND            20
+#define DEADBAND            35
 
 #define ENTRY_SIGNAL        200
 #define EXIT_SIGNAL         100
@@ -19,7 +19,7 @@
 #define SEARCH_FAST_SPEED   250
 #define MIN_FORWARD_SPEED   120
 #define MAX_FORWARD_SPEED   360
-#define MAX_CORRECTION      140
+#define MAX_CORRECTION      90
 
 #define F_CPU 32000000UL
 
