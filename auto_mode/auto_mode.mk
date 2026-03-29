@@ -15,9 +15,9 @@ SIZE=arm-none-eabi-size
 
 CPUFLAGS=-mcpu=cortex-m0plus -mthumb
 CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -Wextra -I. -I../Common/Include
-LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lc -lnosys -lgcc
+LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lgcc
 
-OBJS=main.o board.o collision_detector.o debug_uart.o field_sensor_adc.o hbridge_motor.o printf_stubs.o robot_auto_mode.o vl53l0x.o startup.o
+OBJS=main.o startup.o
 
 all: $(TARGET).hex
 
@@ -31,30 +31,6 @@ $(TARGET).hex: $(TARGET).elf
 
 main.o: main.c
 	$(CC) -c $(CFLAGS) main.c -o main.o
-
-board.o: board.c
-	$(CC) -c $(CFLAGS) board.c -o board.o
-
-collision_detector.o: collision_detector.c
-	$(CC) -c $(CFLAGS) collision_detector.c -o collision_detector.o
-
-debug_uart.o: debug_uart.c
-	$(CC) -c $(CFLAGS) debug_uart.c -o debug_uart.o
-
-field_sensor_adc.o: field_sensor_adc.c
-	$(CC) -c $(CFLAGS) field_sensor_adc.c -o field_sensor_adc.o
-
-hbridge_motor.o: hbridge_motor.c
-	$(CC) -c $(CFLAGS) hbridge_motor.c -o hbridge_motor.o
-
-printf_stubs.o: printf_stubs.c
-	$(CC) -c $(CFLAGS) printf_stubs.c -o printf_stubs.o
-
-robot_auto_mode.o: robot_auto_mode.c
-	$(CC) -c $(CFLAGS) robot_auto_mode.c -o robot_auto_mode.o
-
-vl53l0x.o: ../vl53l0x.c
-	$(CC) -c $(CFLAGS) ../vl53l0x.c -o vl53l0x.o
 
 startup.o: ../Common/Source/startup.c
 	$(CC) -c $(CFLAGS) ../Common/Source/startup.c -o startup.o
