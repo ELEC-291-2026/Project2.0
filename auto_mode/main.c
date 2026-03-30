@@ -5,7 +5,7 @@
 #define ADC_CH_RIGHT        4
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          350
+#define BASE_SPEED          325
 #define TURN_SPEED          300
 #define MAX_PWM             1000
 #define KP                  2
@@ -60,7 +60,7 @@ static void set_motor_pin(unsigned int bit_mask, int active)
 #endif
 }
 
-static void wait_1ms(void)
+void wait_1ms(void)
 {
     SysTick->LOAD = (F_CPU / 1000UL) - 1UL;
     SysTick->VAL = 0;
@@ -73,7 +73,7 @@ static void wait_1ms(void)
     SysTick->CTRL = 0;
 }
 
-static void delayms(unsigned int ms)
+void delayms(unsigned int ms)
 {
     while (ms-- > 0U)
     {
@@ -521,16 +521,16 @@ void main(void)
             uart_print_int(sensors.right_signal, 4);
             uart_puts(" d=");
             uart_print_int(sensors.right_detected, 1);
-            uart_puts(" | IX s=");
-            uart_print_int(sensors.intersection_signal, 4);
-            uart_puts(" d=");
-            uart_print_int(sensors.intersection_detected, 1);
+            uart_puts(" | IX r=");
+            uart_print_int(sensors.intersection_raw, 4);
             uart_puts(" | dir=");
             uart_puts(movement_name(g_last_left_command, g_last_right_command));
             uart_puts(" lc=");
             uart_print_int(g_last_left_command, 4);
             uart_puts(" rc=");
             uart_print_int(g_last_right_command, 4);
+            uart_puts(" ix=");
+            uart_print_int(context.intersection_count, 1);
             uart_puts("\r\n");
         }
 

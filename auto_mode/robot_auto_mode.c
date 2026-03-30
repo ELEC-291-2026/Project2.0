@@ -20,8 +20,8 @@ static path_action_t g_active_action = PATH_STRAIGHT;
 
 static const path_action_t k_path_table[3][8] =
 {
-    { PATH_STRAIGHT, PATH_LEFT,     PATH_LEFT,     PATH_STRAIGHT,
-      PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,    PATH_STOP },
+    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_STOP,
+      PATH_STOP,     PATH_STOP,     PATH_STOP,     PATH_STOP },
     { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,
       PATH_STRAIGHT, PATH_STRAIGHT, PATH_STOP,     PATH_STOP },
     { PATH_RIGHT,    PATH_STRAIGHT, PATH_RIGHT,    PATH_LEFT,
@@ -30,12 +30,12 @@ static const path_action_t k_path_table[3][8] =
 
 enum
 {
-    BASE_SPEED = 350,           /* forward drive speed (out of MAX_PWM) */
+    BASE_SPEED = 420,           /* forward drive speed (out of MAX_PWM) */
     SLOW_SPEED = 0,             /* inner-wheel speed during a steer — full pivot */
     MAX_PWM = 1000,
     STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
     TRACK_THRESHOLD = 200,      /* raw ADC: either sensor above = wire visible */
-    INTERSECTION_THRESHOLD = 1500, /* raw ADC center sensor = intersection */
+    INTERSECTION_THRESHOLD = 100,  /* raw ADC center sensor = intersection */
     FILTER_KEEP_COUNT = 3,
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
@@ -331,8 +331,23 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             if (intersection_started(context, detected_now))
             {
                 g_active_action = path_context_on_intersection(context);
-                g_state = ROBOT_AUTO_INTERSECTION;
-                run_path_action(g_active_action);
+                motor_stop();
+                delayms(400);
+                if (g_active_action == PATH_LEFT || g_active_action == PATH_RIGHT)
+                {
+                    run_path_action(g_active_action);
+                    delayms(700);
+                    motor_stop();
+                    g_state = ROBOT_AUTO_FOLLOW;
+                }
+                else if (g_active_action == PATH_STOP)
+                {
+                    g_state = ROBOT_AUTO_STOP;
+                }
+                else
+                {
+                    g_state = ROBOT_AUTO_FOLLOW;
+                }
                 break;
             }
 
