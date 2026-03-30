@@ -4,8 +4,8 @@
 #define ADC_CH_RIGHT        5
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          400
-#define TURN_SPEED          400
+#define BASE_SPEED          320
+#define TURN_SPEED          320
 #define MAX_PWM             1000
 #define KP                  2
 #define KD                  2
@@ -15,20 +15,21 @@
 #define EXIT_SIGNAL         100
 #define INTERSECT_ENTRY     140
 #define INTERSECT_EXIT      90
-#define TRACK_ACQUIRE_COUNT 3
+#define TRACK_ACQUIRE_COUNT 1
 #define INTERSECTION_DETECT_COUNT 3
 #define INTERSECTION_RELEASE_COUNT 3
 #define INTERSECTION_MIN_HOLD_LOOPS 8
 #define INTERSECTION_TIMEOUT_LOOPS 200
 #define DEFAULT_PATH_INDEX  0
 #define MAX_PATH_STEPS      8
-#define LOST_DRIVE_SPEED    260
-#define SEARCH_DRIVE_SPEED  320
-#define SEARCH_STEER_BIAS   150
-#define ACTION_DRIVE_SPEED  400
-#define ACTION_STEER_BIAS   180
-#define MIN_FORWARD_SPEED   220
-#define MAX_FORWARD_SPEED   560
+#define CONTROL_LOOP_MS     20
+#define FOLLOW_TURN_INNER_SPEED 110
+#define SEARCH_DRIVE_SPEED  260
+#define SEARCH_TURN_INNER_SPEED 90
+#define ACTION_DRIVE_SPEED  300
+#define ACTION_TURN_INNER_SPEED 110
+#define MIN_FORWARD_SPEED   0
+#define MAX_FORWARD_SPEED   400
 #define MAX_CORRECTION      180
 
 #define F_CPU 32000000UL
@@ -409,21 +410,6 @@ static int absdiff(int a, int b)
     return (a > b) ? (a - b) : (b - a);
 }
 
-static int clamp_value(int value, int lower, int upper)
-{
-    if (value < lower)
-    {
-        return lower;
-    }
-
-    if (value > upper)
-    {
-        return upper;
-    }
-
-    return value;
-}
-
 static void update_ch(sensor_ch_t *ch, int sample, int entry, int exit_sig)
 {
     int filt;
@@ -597,21 +583,11 @@ static void run_action(int action)
     switch (action)
     {
         case 1:
-            motors_set(clamp_value(ACTION_DRIVE_SPEED - ACTION_STEER_BIAS,
-                MIN_FORWARD_SPEED,
-                MAX_FORWARD_SPEED),
-                clamp_value(ACTION_DRIVE_SPEED + ACTION_STEER_BIAS,
-                MIN_FORWARD_SPEED,
-                MAX_FORWARD_SPEED));
+            motors_set(ACTION_TURN_INNER_SPEED, ACTION_DRIVE_SPEED);
             break;
 
         case 2:
-            motors_set(clamp_value(ACTION_DRIVE_SPEED + ACTION_STEER_BIAS,
-                MIN_FORWARD_SPEED,
-                MAX_FORWARD_SPEED),
-                clamp_value(ACTION_DRIVE_SPEED - ACTION_STEER_BIAS,
-                MIN_FORWARD_SPEED,
-                MAX_FORWARD_SPEED));
+            motors_set(ACTION_DRIVE_SPEED, ACTION_TURN_INNER_SPEED);
             break;
 
         case 3:
@@ -626,28 +602,22 @@ static void run_action(int action)
 
 static void run_follow(int left_sig, int right_sig)
 {
-    int error;
-    int derivative;
-    int correction;
-    int left_command;
-    int right_command;
+    int diff;
 
-    error = left_sig - right_sig;
-    if (error > -DEADBAND && error < DEADBAND)
+    diff = left_sig - right_sig;
+
+    if (diff > DEADBAND)
     {
-        error = 0;
+        motors_set(FOLLOW_TURN_INNER_SPEED, BASE_SPEED);
     }
-
-    derivative = error - g_prev_error;
-    g_prev_error = error;
-
-    correction = (KP * error) + (KD * derivative);
-    correction = clamp_value(correction, -MAX_CORRECTION, MAX_CORRECTION);
-
-    left_command = clamp_value(BASE_SPEED - correction, MIN_FORWARD_SPEED, MAX_FORWARD_SPEED);
-    right_command = clamp_value(BASE_SPEED + correction, MIN_FORWARD_SPEED, MAX_FORWARD_SPEED);
-
-    motors_set(left_command, right_command);
+    else if (diff < -DEADBAND)
+    {
+        motors_set(BASE_SPEED, FOLLOW_TURN_INNER_SPEED);
+    }
+    else
+    {
+        motors_set(BASE_SPEED, BASE_SPEED);
+    }
 }
 
 static void run_single_sensor_follow(int left_detected, int right_detected)
@@ -656,25 +626,15 @@ static void run_single_sensor_follow(int left_detected, int right_detected)
 
     if (left_detected && !right_detected)
     {
-        motors_set(clamp_value(SEARCH_DRIVE_SPEED - SEARCH_STEER_BIAS,
-            MIN_FORWARD_SPEED,
-            MAX_FORWARD_SPEED),
-            clamp_value(SEARCH_DRIVE_SPEED + SEARCH_STEER_BIAS,
-            MIN_FORWARD_SPEED,
-            MAX_FORWARD_SPEED));
+        motors_set(SEARCH_TURN_INNER_SPEED, SEARCH_DRIVE_SPEED);
     }
     else if (right_detected && !left_detected)
     {
-        motors_set(clamp_value(SEARCH_DRIVE_SPEED + SEARCH_STEER_BIAS,
-            MIN_FORWARD_SPEED,
-            MAX_FORWARD_SPEED),
-            clamp_value(SEARCH_DRIVE_SPEED - SEARCH_STEER_BIAS,
-            MIN_FORWARD_SPEED,
-            MAX_FORWARD_SPEED));
+        motors_set(SEARCH_DRIVE_SPEED, SEARCH_TURN_INNER_SPEED);
     }
     else
     {
-        motors_set(LOST_DRIVE_SPEED, LOST_DRIVE_SPEED);
+        motors_stop();
     }
 }
 
@@ -838,17 +798,10 @@ void main(void)
             case ST_FOLLOW:
                 if (!left.detected && !right.detected)
                 {
+                    motors_stop();
                     ix_sustain = 0;
                     line_acquire_count = 0U;
                     g_state = ST_LOST;
-                    motors_set(LOST_DRIVE_SPEED, LOST_DRIVE_SPEED);
-                    break;
-                }
-
-                if (!(left.detected && right.detected))
-                {
-                    ix_sustain = 0;
-                    run_single_sensor_follow(left.detected, right.detected);
                     break;
                 }
 
@@ -906,7 +859,7 @@ void main(void)
                 break;
 
             case ST_LOST:
-                if (left.detected && right.detected)
+                if (left.detected || right.detected)
                 {
                     if (line_acquire_count < TRACK_ACQUIRE_COUNT)
                     {
@@ -935,6 +888,6 @@ void main(void)
                 break;
         }
 
-        delayms(10U);
+        delayms(CONTROL_LOOP_MS);
     }
 }
