@@ -35,7 +35,7 @@ LOAD main.o
 LOAD startup.o
 LOAD /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a
 
-.text           0x08000000     0x180c
+.text           0x08000000     0x17fc
  *(.vectors)
  .vectors       0x08000000       0xb8 startup.o
                 0x08000000                Vectors
@@ -52,116 +52,116 @@ LOAD /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-no
                 0x08000200       0x50 main.o
  .text.update_ch
                 0x08000250       0xac main.o
- .text.run_action
-                0x080002fc       0x80 main.o
  .text.run_follow
-                0x0800037c       0x80 main.o
+                0x080002fc       0x80 main.o
  .text.run_single_sensor_follow
-                0x080003fc       0x6c main.o
+                0x0800037c       0x6c main.o
+ .text.run_action
+                0x080003e8       0x70 main.o
  .text.TIM2_Handler
-                0x08000468       0xc0 main.o
-                0x08000468                TIM2_Handler
+                0x08000458       0xc0 main.o
+                0x08000458                TIM2_Handler
  .text.startup.main
-                0x08000528      0xcdc main.o
-                0x08000528                main
+                0x08000518      0xcdc main.o
+                0x08000518                main
  .text.Default_Handler
-                0x08001204        0x4 startup.o
-                0x08001204                ADC_COMP_Handler
-                0x08001204                EXTI2_3_Handler
-                0x08001204                TIM21_Handler
-                0x08001204                SysTick_Handler
-                0x08001204                I2C1_Handler
-                0x08001204                PendSV_Handler
-                0x08001204                NMI_Handler
-                0x08001204                WWDG_Handler
-                0x08001204                RTC_Handler
-                0x08001204                EXTI4_15_Handler
-                0x08001204                USART1_Handler
-                0x08001204                DMA_CH4_5_6_7_Handler
-                0x08001204                Default_Handler
-                0x08001204                LPUART1_Handler
-                0x08001204                EXTI0_1_Handler
-                0x08001204                DMA_CH1_Handler
-                0x08001204                SPI2_Handler
-                0x08001204                DMA_CH2_3_Handler
-                0x08001204                I2C2_Handler
-                0x08001204                SVC_Handler
-                0x08001204                LPTIM1_Handler
-                0x08001204                USART2_Handler
-                0x08001204                SPI1_Handler
-                0x08001204                RCC_Handler
-                0x08001204                PVD_Handler
-                0x08001204                TIM22_Handler
-                0x08001204                TIM6_Handler
-                0x08001204                FLASH_Handler
+                0x080011f4        0x4 startup.o
+                0x080011f4                ADC_COMP_Handler
+                0x080011f4                EXTI2_3_Handler
+                0x080011f4                TIM21_Handler
+                0x080011f4                SysTick_Handler
+                0x080011f4                I2C1_Handler
+                0x080011f4                PendSV_Handler
+                0x080011f4                NMI_Handler
+                0x080011f4                WWDG_Handler
+                0x080011f4                RTC_Handler
+                0x080011f4                EXTI4_15_Handler
+                0x080011f4                USART1_Handler
+                0x080011f4                DMA_CH4_5_6_7_Handler
+                0x080011f4                Default_Handler
+                0x080011f4                LPUART1_Handler
+                0x080011f4                EXTI0_1_Handler
+                0x080011f4                DMA_CH1_Handler
+                0x080011f4                SPI2_Handler
+                0x080011f4                DMA_CH2_3_Handler
+                0x080011f4                I2C2_Handler
+                0x080011f4                SVC_Handler
+                0x080011f4                LPTIM1_Handler
+                0x080011f4                USART2_Handler
+                0x080011f4                SPI1_Handler
+                0x080011f4                RCC_Handler
+                0x080011f4                PVD_Handler
+                0x080011f4                TIM22_Handler
+                0x080011f4                TIM6_Handler
+                0x080011f4                FLASH_Handler
  .text.Hard_Fault_Handler
-                0x08001208        0x4 startup.o
-                0x08001208                Hard_Fault_Handler
+                0x080011f8        0x4 startup.o
+                0x080011f8                Hard_Fault_Handler
  .text.initClock
-                0x0800120c       0xbc startup.o
-                0x0800120c                initClock
- .text          0x080012c8      0x114 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
-                0x080012c8                __udivsi3
-                0x080012c8                __aeabi_uidiv
-                0x080013d4                __aeabi_uidivmod
- .text          0x080013dc      0x1d4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
-                0x080013dc                __aeabi_idiv
-                0x080013dc                __divsi3
-                0x080015a8                __aeabi_idivmod
- .text          0x080015b0        0x4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
-                0x080015b0                __aeabi_ldiv0
-                0x080015b0                __aeabi_idiv0
+                0x080011fc       0xbc startup.o
+                0x080011fc                initClock
+ .text          0x080012b8      0x114 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                0x080012b8                __udivsi3
+                0x080012b8                __aeabi_uidiv
+                0x080013c4                __aeabi_uidivmod
+ .text          0x080013cc      0x1d4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                0x080013cc                __aeabi_idiv
+                0x080013cc                __divsi3
+                0x08001598                __aeabi_idivmod
+ .text          0x080015a0        0x4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                0x080015a0                __aeabi_ldiv0
+                0x080015a0                __aeabi_idiv0
  *(.rodata*)
  .rodata.main.str1.4
-                0x080015b4      0x1dd main.o
+                0x080015a4      0x1dd main.o
                                 0x1bf (size before relaxing)
  .rodata.str1.4
-                0x08001791        0x0 main.o
+                0x08001781        0x0 main.o
                                  0x2d (size before relaxing)
- *fill*         0x08001791        0x3 
+ *fill*         0x08001781        0x3 
  .rodata.CSWTCH.48
-                0x08001794        0xc main.o
+                0x08001784        0xc main.o
  .rodata.CSWTCH.45
-                0x080017a0        0xc main.o
+                0x08001790        0xc main.o
  .rodata.k_paths
-                0x080017ac       0x60 main.o
-                0x0800180c                        . = ALIGN (0x4)
-                0x0800180c                        PROVIDE (__init_array_start = .)
+                0x0800179c       0x60 main.o
+                0x080017fc                        . = ALIGN (0x4)
+                0x080017fc                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array)
-                0x0800180c                        PROVIDE (__init_array_end = .)
-                0x0800180c                        . = ALIGN (0x4)
-                0x0800180c                        _etext = .
+                0x080017fc                        PROVIDE (__init_array_end = .)
+                0x080017fc                        . = ALIGN (0x4)
+                0x080017fc                        _etext = .
 
-.glue_7         0x0800180c        0x0
- .glue_7        0x0800180c        0x0 linker stubs
+.glue_7         0x080017fc        0x0
+ .glue_7        0x080017fc        0x0 linker stubs
 
-.glue_7t        0x0800180c        0x0
- .glue_7t       0x0800180c        0x0 linker stubs
+.glue_7t        0x080017fc        0x0
+ .glue_7t       0x080017fc        0x0 linker stubs
 
-.vfp11_veneer   0x0800180c        0x0
- .vfp11_veneer  0x0800180c        0x0 linker stubs
+.vfp11_veneer   0x080017fc        0x0
+ .vfp11_veneer  0x080017fc        0x0 linker stubs
 
-.v4_bx          0x0800180c        0x0
- .v4_bx         0x0800180c        0x0 linker stubs
+.v4_bx          0x080017fc        0x0
+ .v4_bx         0x080017fc        0x0 linker stubs
 
-.iplt           0x0800180c        0x0
- .iplt          0x0800180c        0x0 main.o
+.iplt           0x080017fc        0x0
+ .iplt          0x080017fc        0x0 main.o
 
-.rel.dyn        0x0800180c        0x0
- .rel.iplt      0x0800180c        0x0 main.o
+.rel.dyn        0x080017fc        0x0
+ .rel.iplt      0x080017fc        0x0 main.o
 
-.data           0x20000000        0x0 load address 0x0800180c
+.data           0x20000000        0x0 load address 0x080017fc
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _data = .
  *(.data*)
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _edata = .
 
-.igot.plt       0x20000000        0x0 load address 0x0800180c
+.igot.plt       0x20000000        0x0 load address 0x080017fc
  .igot.plt      0x20000000        0x0 main.o
 
-.bss            0x20000000       0x28 load address 0x0800180c
+.bss            0x20000000       0x28 load address 0x080017fc
                 0x20000000                        _bss = .
  *(.bss*)
  .bss.g_action  0x20000000        0x4 main.o
@@ -186,20 +186,20 @@ LOAD /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-no
 OUTPUT(auto_mode.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000     0x2447
- .debug_info    0x00000000     0x20de main.o
- .debug_info    0x000020de      0x369 startup.o
+.debug_info     0x00000000     0x2478
+ .debug_info    0x00000000     0x210f main.o
+ .debug_info    0x0000210f      0x369 startup.o
 
-.debug_abbrev   0x00000000      0x677
- .debug_abbrev  0x00000000      0x4f3 main.o
- .debug_abbrev  0x000004f3      0x184 startup.o
+.debug_abbrev   0x00000000      0x676
+ .debug_abbrev  0x00000000      0x4f2 main.o
+ .debug_abbrev  0x000004f2      0x184 startup.o
 
 .debug_loclists
-                0x00000000     0x10b6
+                0x00000000     0x1102
  .debug_loclists
-                0x00000000     0x107d main.o
+                0x00000000     0x10c9 main.o
  .debug_loclists
-                0x0000107d       0x39 startup.o
+                0x000010c9       0x39 startup.o
 
 .debug_aranges  0x00000000       0x98
  .debug_aranges
@@ -208,15 +208,15 @@ LOAD linker stubs
                 0x00000060       0x38 startup.o
 
 .debug_rnglists
-                0x00000000      0x54c
+                0x00000000      0x557
  .debug_rnglists
-                0x00000000      0x525 main.o
+                0x00000000      0x530 main.o
  .debug_rnglists
-                0x00000525       0x27 startup.o
+                0x00000530       0x27 startup.o
 
-.debug_line     0x00000000     0x2875
- .debug_line    0x00000000     0x2554 main.o
- .debug_line    0x00002554      0x321 startup.o
+.debug_line     0x00000000     0x2820
+ .debug_line    0x00000000     0x24ff main.o
+ .debug_line    0x000024ff      0x321 startup.o
 
 .debug_str      0x00000000      0x724
  .debug_str     0x00000000      0x724 main.o
