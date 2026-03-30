@@ -1,5 +1,7 @@
-#include "main.h"
+#include "stm32l051xx.h"
 #include "collision_detector.h"
+
+extern void delayms(unsigned int ms);
 #include "collision_detector_config.h"
 #include "../vl53l0x.h"
 
@@ -171,6 +173,8 @@ unsigned char i2c_read_addr8_data8(unsigned char address, unsigned char *value)
 
     *value = (unsigned char)I2C1->RXDR;
 
+    I2C1->ICR = I2C_ICR_NACKCF; /* master NACK before STOP is normal in read mode */
+
     if (!collision_i2c_wait_for_flag(I2C_ISR_STOPF))
     {
         collision_i2c_clear_flags();
@@ -229,6 +233,8 @@ unsigned char i2c_read_addr8_data16(unsigned char address, unsigned short *value
 
     *value = (unsigned short)(*value | (unsigned short)I2C1->RXDR);
 
+    I2C1->ICR = I2C_ICR_NACKCF; /* master NACK before STOP is normal in read mode */
+
     if (!collision_i2c_wait_for_flag(I2C_ISR_STOPF))
     {
         collision_i2c_clear_flags();
@@ -258,11 +264,6 @@ int collision_detector_init(collision_detector_t *detector)
     delayms(COLLISION_DETECTOR_BOOT_DELAY_MS);
 
     if (!vl53l0x_init())
-    {
-        return 0;
-    }
-
-    if (!vl53l0x_start_continuous())
     {
         return 0;
     }

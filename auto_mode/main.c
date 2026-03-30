@@ -1,5 +1,7 @@
 #include "stm32l051xx.h"
 #include "robot_auto_mode.h"
+#include "collision_detector.h"
+#include "../vl53l0x.h"
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
@@ -36,6 +38,7 @@ static int g_last_left_command;
 static int g_last_right_command;
 static volatile unsigned int g_motor_compare[4];
 static volatile unsigned int g_pwm_counter;
+
 
 static void set_motor_pin(unsigned int bit_mask, int active)
 {
@@ -326,6 +329,7 @@ void TIM2_Handler(void)
     }
 }
 
+
 static void adc_init(void)
 {
     RCC->IOPENR |= (1U << 0U);
@@ -444,6 +448,7 @@ static const char *movement_name(int left, int right)
     return "ARC_LEFT";
 }
 
+
 /* Bridge called by robot_auto_mode.c to drive the physical motors. */
 void hbridge_motor_apply(const motor_command_t *command)
 {
@@ -454,6 +459,10 @@ void main(void)
 {
     field_data_t sensors;
     path_context_t context;
+    collision_detector_t collision;
+    int tof_ok;
+    unsigned int tof_poll_counter;
+    int obstacle_detected;
     unsigned int i;
     unsigned int loop;
 
@@ -470,9 +479,13 @@ void main(void)
     motors_stop();
 
     robot_auto_mode_init(&context, PATH_ID_1);
+    tof_ok = collision_detector_init(&collision);
+    tof_poll_counter = 0U;
+    obstacle_detected = 0;
 
     delayms(500U);
     uart_puts("Robot starting up...\r\n");
+    uart_puts(tof_ok ? "ToF init OK\r\n" : "ToF init FAILED\r\n");
     uart_puts("--- RAW ADC DUMP (no filtering) ---\r\n");
 
     for (i = 0U; i < 20U; ++i)
@@ -536,7 +549,26 @@ void main(void)
 
         ++loop;
 
-        robot_auto_mode_step(&sensors, &context);
+        /* Poll VL53L0X every 500ms — stop motors while obstacle within 200mm */
+        ++tof_poll_counter;
+        if (tof_ok && tof_poll_counter >= 50U)
+        {
+            uint16_t dist_mm;
+            tof_poll_counter = 0U;
+            if (vl53l0x_read_range_single(&dist_mm))
+            {
+                obstacle_detected = (dist_mm < 200U);
+            }
+        }
+
+        if (obstacle_detected)
+        {
+            motors_stop();
+        }
+        else
+        {
+            robot_auto_mode_step(&sensors, &context);
+        }
 
         delayms(10U);
     }
