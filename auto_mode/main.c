@@ -22,8 +22,10 @@
 #define INTERSECTION_TIMEOUT_LOOPS 200
 #define DEFAULT_PATH_INDEX  0
 #define MAX_PATH_STEPS      8
-#define SEARCH_SLOW_SPEED   280
-#define SEARCH_FAST_SPEED   400
+#define SEARCH_DRIVE_SPEED  340
+#define SEARCH_STEER_BIAS   80
+#define ACTION_DRIVE_SPEED  420
+#define ACTION_STEER_BIAS   120
 #define MIN_FORWARD_SPEED   220
 #define MAX_FORWARD_SPEED   560
 #define MAX_CORRECTION      81
@@ -594,11 +596,21 @@ static void run_action(int action)
     switch (action)
     {
         case 1:
-            motors_set(-TURN_SPEED, TURN_SPEED);
+            motors_set(clamp_value(ACTION_DRIVE_SPEED - ACTION_STEER_BIAS,
+                MIN_FORWARD_SPEED,
+                MAX_FORWARD_SPEED),
+                clamp_value(ACTION_DRIVE_SPEED + ACTION_STEER_BIAS,
+                MIN_FORWARD_SPEED,
+                MAX_FORWARD_SPEED));
             break;
 
         case 2:
-            motors_set(TURN_SPEED, -TURN_SPEED);
+            motors_set(clamp_value(ACTION_DRIVE_SPEED + ACTION_STEER_BIAS,
+                MIN_FORWARD_SPEED,
+                MAX_FORWARD_SPEED),
+                clamp_value(ACTION_DRIVE_SPEED - ACTION_STEER_BIAS,
+                MIN_FORWARD_SPEED,
+                MAX_FORWARD_SPEED));
             break;
 
         case 3:
@@ -643,11 +655,21 @@ static void run_single_sensor_follow(int left_detected, int right_detected)
 
     if (left_detected && !right_detected)
     {
-        motors_set(SEARCH_SLOW_SPEED, SEARCH_FAST_SPEED);
+        motors_set(clamp_value(SEARCH_DRIVE_SPEED - SEARCH_STEER_BIAS,
+            MIN_FORWARD_SPEED,
+            MAX_FORWARD_SPEED),
+            clamp_value(SEARCH_DRIVE_SPEED + SEARCH_STEER_BIAS,
+            MIN_FORWARD_SPEED,
+            MAX_FORWARD_SPEED));
     }
     else if (right_detected && !left_detected)
     {
-        motors_set(SEARCH_FAST_SPEED, SEARCH_SLOW_SPEED);
+        motors_set(clamp_value(SEARCH_DRIVE_SPEED + SEARCH_STEER_BIAS,
+            MIN_FORWARD_SPEED,
+            MAX_FORWARD_SPEED),
+            clamp_value(SEARCH_DRIVE_SPEED - SEARCH_STEER_BIAS,
+            MIN_FORWARD_SPEED,
+            MAX_FORWARD_SPEED));
     }
     else
     {
