@@ -14,10 +14,10 @@ OBJCOPY=arm-none-eabi-objcopy
 SIZE=arm-none-eabi-size
 
 CPUFLAGS=-mcpu=cortex-m0plus -mthumb
-CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -Wextra -std=gnu89 -I. -I../Common/Include
+CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -Wextra -I. -I../Common/Include
 LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lgcc
 
-OBJS=main_main.o startup.o main_logic.o
+OBJS=main.o startup.o
 
 all: $(TARGET).hex
 
@@ -29,11 +29,8 @@ $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -O ihex $(TARGET).elf $(TARGET).hex
 	@echo Success!
 
-main_main.o: main.c
-	$(CC) -c $(CFLAGS) -DFINAL_CODING_STRUCTURE_MAIN main.c -o main_main.o
-
-main_logic.o: main.c
-	$(CC) -c $(CFLAGS) -DFINAL_CODING_STRUCTURE_LOGIC main.c -o main_logic.o
+main.o: main.c
+	$(CC) -c $(CFLAGS) main.c -o main.o
 
 startup.o: ../Common/Source/startup.c
 	$(CC) -c $(CFLAGS) ../Common/Source/startup.c -o startup.o
