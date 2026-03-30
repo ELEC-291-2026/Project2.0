@@ -22,6 +22,7 @@
 #define INTERSECTION_TIMEOUT_LOOPS 200
 #define DEFAULT_PATH_INDEX  0
 #define MAX_PATH_STEPS      8
+#define LOST_DRIVE_SPEED    320
 #define SEARCH_DRIVE_SPEED  340
 #define SEARCH_STEER_BIAS   80
 #define ACTION_DRIVE_SPEED  420
@@ -673,7 +674,7 @@ static void run_single_sensor_follow(int left_detected, int right_detected)
     }
     else
     {
-        motors_stop();
+        motors_set(LOST_DRIVE_SPEED, LOST_DRIVE_SPEED);
     }
 }
 
@@ -837,10 +838,10 @@ void main(void)
             case ST_FOLLOW:
                 if (!left.detected && !right.detected)
                 {
-                    motors_stop();
                     ix_sustain = 0;
                     line_acquire_count = 0U;
                     g_state = ST_LOST;
+                    motors_set(LOST_DRIVE_SPEED, LOST_DRIVE_SPEED);
                     break;
                 }
 
