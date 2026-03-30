@@ -13,14 +13,20 @@
 
 #define ENTRY_SIGNAL        200
 #define EXIT_SIGNAL         100
-#define INTERSECT_ENTRY     9999
-#define INTERSECT_EXIT      100
+#define INTERSECT_ENTRY     140
+#define INTERSECT_EXIT      90
 #define TRACK_ACQUIRE_COUNT 3
+#define INTERSECTION_DETECT_COUNT 3
+#define INTERSECTION_RELEASE_COUNT 3
+#define INTERSECTION_MIN_HOLD_LOOPS 8
+#define INTERSECTION_TIMEOUT_LOOPS 200
+#define DEFAULT_PATH_INDEX  0
+#define MAX_PATH_STEPS      8
 #define SEARCH_SLOW_SPEED   170
 #define SEARCH_FAST_SPEED   250
 #define MIN_FORWARD_SPEED   120
 #define MAX_FORWARD_SPEED   360
-#define MAX_CORRECTION      90
+#define MAX_CORRECTION      81
 
 #define F_CPU 32000000UL
 
@@ -564,6 +570,25 @@ static const char *movement_name(int left, int right)
     return "ARC_LEFT";
 }
 
+static const char *action_name(int action)
+{
+    switch (action)
+    {
+        case 1:
+            return "LEFT";
+
+        case 2:
+            return "RIGHT";
+
+        case 3:
+            return "STOP";
+
+        case 0:
+        default:
+            return "STRAIGHT";
+    }
+}
+
 static void run_action(int action)
 {
     switch (action)
@@ -640,6 +665,7 @@ void main(void)
     int ix_active;
     int ix_timer;
     int ix_sustain;
+    int ix_release_sustain;
     unsigned int line_acquire_count;
     unsigned int i;
     unsigned int loop;
@@ -665,7 +691,7 @@ void main(void)
     intersect.detected = 0;
     intersect.samples = 0U;
 
-    path = 0;
+    path = DEFAULT_PATH_INDEX;
     ix_count = 0;
     ix_active = 0;
     g_state = ST_LOST;
@@ -677,6 +703,7 @@ void main(void)
     loop = 0U;
     ix_timer = 0;
     ix_sustain = 0;
+    ix_release_sustain = 0;
 
     clock_init();
     uart_init();
@@ -686,6 +713,9 @@ void main(void)
 
     delayms(500U);
     uart_puts("Robot starting up...\r\n");
+    uart_puts("Selected path=");
+    uart_print_int(path + 1, 1);
+    uart_puts("\r\n");
     uart_puts("--- RAW ADC DUMP (no filtering) ---\r\n");
 
     for (i = 0U; i < 20U; ++i)
@@ -718,6 +748,19 @@ void main(void)
         update_ch(&right, adc_read(ADC_CH_RIGHT), ENTRY_SIGNAL, EXIT_SIGNAL);
         update_ch(&intersect, adc_read(ADC_CH_INTERSECT), INTERSECT_ENTRY, INTERSECT_EXIT);
 
+        if (intersect.detected)
+        {
+            ix_release_sustain = 0;
+        }
+        else if (ix_release_sustain < INTERSECTION_RELEASE_COUNT)
+        {
+            ++ix_release_sustain;
+            if (ix_release_sustain >= INTERSECTION_RELEASE_COUNT)
+            {
+                ix_active = 0;
+            }
+        }
+
         if ((loop % 5U) == 0U)
         {
             uart_puts("L r=");
@@ -744,6 +787,8 @@ void main(void)
             uart_print_int(intersect.detected, 1);
             uart_puts(" | st=");
             uart_puts(state_name(g_state));
+            uart_puts(" act=");
+            uart_puts(action_name(g_action));
             uart_puts(" dir=");
             uart_puts(movement_name(g_last_left_command, g_last_right_command));
             uart_puts(" lc=");
@@ -754,6 +799,10 @@ void main(void)
             uart_print_int(ix_timer, 3);
             uart_puts(" xs=");
             uart_print_int(ix_sustain, 1);
+            uart_puts(" xr=");
+            uart_print_int(ix_release_sustain, 1);
+            uart_puts(" ic=");
+            uart_print_int(ix_count, 1);
             uart_puts(" la=");
             uart_print_int((int)line_acquire_count, 2);
             uart_puts("\r\n");
@@ -776,27 +825,29 @@ void main(void)
                 if (!(left.detected && right.detected))
                 {
                     ix_sustain = 0;
-                    ix_active = 0;
                     run_single_sensor_follow(left.detected, right.detected);
                     break;
                 }
 
-                if (intersect.detected)
+                if (intersect.detected && !ix_active)
                 {
-                    ++ix_sustain;
+                    if (ix_sustain < INTERSECTION_DETECT_COUNT)
+                    {
+                        ++ix_sustain;
+                    }
                 }
                 else
                 {
                     ix_sustain = 0;
-                    ix_active = 0;
                 }
 
-                if (ix_sustain >= 3 && !ix_active)
+                if (ix_sustain >= INTERSECTION_DETECT_COUNT)
                 {
                     ix_active = 1;
                     ix_sustain = 0;
+                    ix_release_sustain = 0;
                     ix_timer = 0;
-                    g_action = (ix_count < 8) ? k_paths[path][ix_count++] : 3;
+                    g_action = (ix_count < MAX_PATH_STEPS) ? k_paths[path][ix_count++] : 3;
                     g_state = ST_INTERSECTION;
                     run_action(g_action);
                     break;
@@ -808,9 +859,10 @@ void main(void)
             case ST_INTERSECTION:
                 ++ix_timer;
 
-                if (!intersect.detected || ix_timer > 200)
+                if ((ix_release_sustain >= INTERSECTION_RELEASE_COUNT &&
+                    ix_timer >= INTERSECTION_MIN_HOLD_LOOPS) ||
+                    ix_timer > INTERSECTION_TIMEOUT_LOOPS)
                 {
-                    ix_active = 0;
                     ix_sustain = 0;
                     ix_timer = 0;
 
