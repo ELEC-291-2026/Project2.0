@@ -4,8 +4,8 @@
 #define ADC_CH_RIGHT        5
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          260
-#define TURN_SPEED          260
+#define BASE_SPEED          300
+#define TURN_SPEED          300
 #define MAX_PWM             1000
 #define KP                  1
 #define KD                  2
@@ -22,10 +22,10 @@
 #define INTERSECTION_TIMEOUT_LOOPS 200
 #define DEFAULT_PATH_INDEX  0
 #define MAX_PATH_STEPS      8
-#define SEARCH_SLOW_SPEED   170
-#define SEARCH_FAST_SPEED   250
-#define MIN_FORWARD_SPEED   120
-#define MAX_FORWARD_SPEED   360
+#define SEARCH_SLOW_SPEED   200
+#define SEARCH_FAST_SPEED   290
+#define MIN_FORWARD_SPEED   150
+#define MAX_FORWARD_SPEED   420
 #define MAX_CORRECTION      81
 
 #define F_CPU 32000000UL
