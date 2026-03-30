@@ -292,27 +292,25 @@ void main(void)
 	        {
 	        	translated_v[0] = counterMS - normalized[0];
 	        	
-	        	/*
-	        	if(translated_v[0] >=118)
-	        		translated_v[0] = 120;
-	        	else if(translated_v[0] <= -118)
-	        		translated_v[0] = -120;
-	        	else if(translated_v[0] <= 3 && translated_v[0] >= -3)
+	        	if(translated_v[0] >=190)
+	        		translated_v[0] = 200;
+	        	else if(translated_v[0] <= -190)
+	        		translated_v[0] = -200;
+	        	else if(translated_v[0] <= 20 && translated_v[0] >= -20)
 	        		translated_v[0] = 0;
-	        	*/
 	        }
 	        else if(counterMS <=  7000)
 	        {
 	        	translated_v[1] = counterMS - normalized[1];
 	        	
-	        	/*
-	        	if(translated_v[1] >=118)
-	        		translated_v[1] = 120;
-	        	else if(translated_v[1] <= -118)
-	        		translated_v[1] = -120;
-	        	else if(translated_v[1] <= 3 && translated_v[1] >= -3)
+	        	
+	        	if(translated_v[1] >=190)
+	        		translated_v[1] = 200;
+	        	else if(translated_v[1] <= -190)
+	        		translated_v[1] = -200;
+	        	else if(translated_v[1] <= 20 && translated_v[1] >= -20)
 	        		translated_v[1] = 0;
-	        	*/
+	        	
 	        }
 	        else if(counterMS <=  12500)
 	        {
@@ -337,7 +335,7 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 	    	
-	    	printf("Time: %d us, x: %d, y: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1]);
+	    	printf("Time: %6d us, x: %5d, y: %5d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1]);
 	    }
 	    //control(translated_v[0], translated_v[1]);
 	    end:;
