@@ -1,4 +1,5 @@
 
+
 #include "../Common/Include/stm32l051xx.h"
 #include "../Common/Include/serial.h"
 #include <stdio.h>
@@ -250,15 +251,13 @@ void TIM2_Handler(void)
 static void control(int x, int y)
 {
 	//we convert to new system where left is controlled by x+y, and right by x-y
-	int scaled_x = x*999/120;
-	int scaled_y = y*999/120;
+	int scaled_x = x*999/200;
+	int scaled_y = y*999/200;
 	
-	int left = scaled_x+scaled_y;
-	int right = scaled_x-scaled_y;
+	int left = (scaled_y+scaled_x)/3;
+	int right = (scaled_y-scaled_x)/3;
 	
 	set_motor_outputs(left, right);
-	
-
 }
 
 
@@ -312,15 +311,7 @@ void main(void)
 	        		translated_v[1] = 0;
 	        	
 	        }
-	        else if(counterMS <=  12500)
-	        {
-	        	
-	        	printf("AUTOMODE\n\r");
-	        	waitms(100);
-	        	goto end;
-	        }
-	        
-	        else if(counterMS <=  25000)
+	        else if(counterMS <=  30000)
 	    	{
 	    		counterNormalize = 3;
 	    		waitms(100);
@@ -336,8 +327,10 @@ void main(void)
 	    	}
 	    	
 	    	printf("Time: %6d us, x: %5d, y: %5d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1]);
+	    	control(translated_v[0],translated_v[1]);
 	    }
-	    //control(translated_v[0], translated_v[1]);
 	    end:;
+	    
    }
+   
 }
