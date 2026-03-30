@@ -30,8 +30,8 @@
 
 #define F_CPU 32000000UL
 
-#define LEFT_MOTOR_SIGN     1
-#define RIGHT_MOTOR_SIGN    1
+#define LEFT_MOTOR_SIGN     -1
+#define RIGHT_MOTOR_SIGN    -1
 #define MOTOR_OUTPUT_ACTIVE_LOW 1
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
