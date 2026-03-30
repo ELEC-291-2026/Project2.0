@@ -65,7 +65,9 @@ void field_sensor_update(field_data_t *sensors,
 void path_context_reset(path_context_t *context, path_id_t selected_path);
 path_action_t path_context_on_intersection(path_context_t *context);
 void hbridge_motor_apply(const motor_command_t *command);
+void delayms(unsigned int ms);
 void robot_auto_mode_init(path_context_t *context, path_id_t selected_path);
+void robot_auto_mode_resume(path_context_t *context);
 void robot_auto_mode_set_path(path_context_t *context, path_id_t selected_path);
 void robot_auto_mode_step(field_data_t *sensors, path_context_t *context);
 robot_state_t robot_auto_mode_get_state(void);
