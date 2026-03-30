@@ -1,22 +1,33 @@
+#if !defined(FINAL_CODING_STRUCTURE_MAIN) && !defined(FINAL_CODING_STRUCTURE_LOGIC)
+#error "Build this file with FINAL_CODING_STRUCTURE_MAIN or FINAL_CODING_STRUCTURE_LOGIC defined."
+#endif
+
+#if defined(FINAL_CODING_STRUCTURE_MAIN)
+
 #include "../Common/Include/stm32l051xx.h"
-
 #include "robot_auto_mode.h"
-#include "hbridge_motor.h"
-#include "field_sensor_adc_config.h"
-
-/*
- * Consolidated auto-mode target.
- *
- * This file folds the logic from the original auto_mode/main.c and
- * auto_mode/robot_auto_mode.c into one translation unit so the final
- * project structure only needs a single firmware source file.
- */
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
 #define ADC_CH_INTERSECT    6
 
+#define BASE_SPEED          325
+#define TURN_SPEED          300
 #define MAX_PWM             1000
+#define KP                  2
+#define KD                  3
+#define DEADBAND            20
+
+#define ENTRY_SIGNAL        200
+#define EXIT_SIGNAL         100
+#define INTERSECT_ENTRY     9999
+#define INTERSECT_EXIT      100
+#define TRACK_ACQUIRE_COUNT 3
+#define SEARCH_SLOW_SPEED   200
+#define SEARCH_FAST_SPEED   320
+#define MIN_FORWARD_SPEED   150
+#define MAX_FORWARD_SPEED   480
+#define MAX_CORRECTION      160
 
 #define F_CPU 32000000UL
 
@@ -31,33 +42,6 @@ static int g_last_left_command;
 static int g_last_right_command;
 static volatile unsigned int g_motor_compare[4];
 static volatile unsigned int g_pwm_counter;
-
-static robot_state_t g_state = ROBOT_AUTO_FOLLOW;
-static path_action_t g_active_action = PATH_STRAIGHT;
-
-static const path_action_t k_path_table[3][8] =
-{
-    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_STOP,
-      PATH_STOP,     PATH_STOP,     PATH_STOP,     PATH_STOP },
-    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,
-      PATH_STRAIGHT, PATH_STRAIGHT, PATH_STOP,     PATH_STOP },
-    { PATH_RIGHT,    PATH_STRAIGHT, PATH_RIGHT,    PATH_LEFT,
-      PATH_RIGHT,    PATH_LEFT,     PATH_STRAIGHT, PATH_STOP }
-};
-
-enum
-{
-    BASE_SPEED = 420,
-    SLOW_SPEED = 0,
-    STEER_DEADBAND = 80,
-    TRACK_THRESHOLD = 200,
-    INTERSECTION_THRESHOLD = 100,
-    FILTER_KEEP_COUNT = 3,
-    BASELINE_IDLE_KEEP_COUNT = 15,
-    BASELINE_STARTUP_KEEP_COUNT = 7,
-    STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 300
-};
 
 static void set_motor_pin(unsigned int bit_mask, int active)
 {
@@ -476,17 +460,6 @@ void hbridge_motor_stop_all(void)
     motors_stop();
 }
 
-void hbridge_motor_apply(const motor_command_t *command)
-{
-    if (command == 0)
-    {
-        hbridge_motor_stop_all();
-        return;
-    }
-
-    motors_set(command->left_command, command->right_command);
-}
-
 motor_command_t hbridge_motor_get_last_command(void)
 {
     motor_command_t command;
@@ -496,6 +469,154 @@ motor_command_t hbridge_motor_get_last_command(void)
 
     return command;
 }
+
+void hbridge_motor_apply(const motor_command_t *command)
+{
+    motors_set(command->left_command, command->right_command);
+}
+
+void main(void)
+{
+    field_data_t sensors;
+    path_context_t context;
+    unsigned int i;
+    unsigned int loop;
+
+    field_sensor_reset(&sensors);
+
+    g_last_left_command = 0;
+    g_last_right_command = 0;
+    loop = 0U;
+
+    clock_init();
+    uart_init();
+    pwm_init();
+    adc_init();
+    motors_stop();
+
+    robot_auto_mode_init(&context, PATH_ID_1);
+
+    delayms(500U);
+    uart_puts("Robot starting up...\r\n");
+    uart_puts("--- RAW ADC DUMP (no filtering) ---\r\n");
+
+    for (i = 0U; i < 20U; ++i)
+    {
+        uart_puts("L=");
+        uart_print_int(adc_read(ADC_CH_LEFT), 4);
+        uart_puts("  R=");
+        uart_print_int(adc_read(ADC_CH_RIGHT), 4);
+        uart_puts("  IX=");
+        uart_print_int(adc_read(ADC_CH_INTERSECT), 4);
+        uart_puts("\r\n");
+        delayms(100U);
+    }
+
+    uart_puts("--- END DUMP, starting warmup ---\r\n");
+
+    for (i = 0U; i < 64U; ++i)
+    {
+        field_sensor_update(&sensors,
+            adc_read(ADC_CH_LEFT),
+            adc_read(ADC_CH_RIGHT),
+            adc_read(ADC_CH_INTERSECT));
+        delayms(2U);
+    }
+
+    uart_puts("Warmup done. Entering main loop.\r\n");
+
+    while (1)
+    {
+        field_sensor_update(&sensors,
+            adc_read(ADC_CH_LEFT),
+            adc_read(ADC_CH_RIGHT),
+            adc_read(ADC_CH_INTERSECT));
+
+        if ((loop % 5U) == 0U)
+        {
+            uart_puts("L r=");
+            uart_print_int(sensors.left_raw, 4);
+            uart_puts(" s=");
+            uart_print_int(sensors.left_signal, 4);
+            uart_puts(" d=");
+            uart_print_int(sensors.left_detected, 1);
+            uart_puts(" | R r=");
+            uart_print_int(sensors.right_raw, 4);
+            uart_puts(" s=");
+            uart_print_int(sensors.right_signal, 4);
+            uart_puts(" d=");
+            uart_print_int(sensors.right_detected, 1);
+            uart_puts(" | IX r=");
+            uart_print_int(sensors.intersection_raw, 4);
+            uart_puts(" | dir=");
+            uart_puts(movement_name(g_last_left_command, g_last_right_command));
+            uart_puts(" lc=");
+            uart_print_int(g_last_left_command, 4);
+            uart_puts(" rc=");
+            uart_print_int(g_last_right_command, 4);
+            uart_puts(" ix=");
+            uart_print_int(context.intersection_count, 1);
+            uart_puts("\r\n");
+        }
+
+        ++loop;
+
+        robot_auto_mode_step(&sensors, &context);
+
+        delayms(10U);
+    }
+}
+
+#endif
+
+#if defined(FINAL_CODING_STRUCTURE_LOGIC)
+
+#include "robot_auto_mode.h"
+#include "field_sensor_adc_config.h"
+#include "hbridge_motor.h"
+
+void delayms(unsigned int ms);
+
+/*
+ * Auto-mode starter based on the project slides:
+ *
+ * - Left field detector -> ADC
+ * - Right field detector -> ADC
+ * - Intersection detector -> ADC
+ * - Two H-bridges -> signed motor commands
+ *
+ * The main goal is to keep the robot centered by driving until d1 == d2.
+ * Path decisions are made from the selected path and the number of distinct
+ * intersections the robot has crossed.
+ */
+
+static robot_state_t g_state = ROBOT_AUTO_FOLLOW;
+static path_action_t g_active_action = PATH_STRAIGHT;
+
+static const path_action_t k_path_table[3][8] =
+{
+    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_STOP,
+      PATH_STOP,     PATH_STOP,     PATH_STOP,     PATH_STOP },
+    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,
+      PATH_STRAIGHT, PATH_STRAIGHT, PATH_STOP,     PATH_STOP },
+    { PATH_RIGHT,    PATH_STRAIGHT, PATH_RIGHT,    PATH_LEFT,
+      PATH_RIGHT,    PATH_LEFT,     PATH_STRAIGHT, PATH_STOP }
+};
+
+enum
+{
+    BASE_SPEED = 420,           /* forward drive speed (out of MAX_PWM) */
+    SLOW_SPEED = 0,             /* inner-wheel speed during a steer - full pivot */
+    MAX_PWM = 1000,
+    STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
+    TRACK_THRESHOLD = 200,      /* raw ADC: either sensor above = wire visible */
+    INTERSECTION_THRESHOLD = 100,  /* raw ADC center sensor = intersection */
+    FILTER_KEEP_COUNT = 3,
+    BASELINE_IDLE_KEEP_COUNT = 15,
+    BASELINE_STARTUP_KEEP_COUNT = 7,
+    STARTUP_SETTLE_SAMPLES = 16,
+    TURN_SPEED = 300
+};
 
 static int mix_samples(int previous, int sample, int keep_count)
 {
@@ -644,10 +765,12 @@ static void run_follow_controller(const field_data_t *sensors)
 
     if (diff > STEER_DEADBAND)
     {
+        /* Wire is to the left - slow right wheel to steer left */
         motor_set_signed(SLOW_SPEED, BASE_SPEED);
     }
     else if (diff < -STEER_DEADBAND)
     {
+        /* Wire is to the right - slow left wheel to steer right */
         motor_set_signed(BASE_SPEED, SLOW_SPEED);
     }
     else
@@ -827,6 +950,7 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             break;
 
         case ROBOT_AUTO_LOST:
+            /* Keep steering - never stop while searching for the wire */
             run_follow_controller(sensors);
             if (sensors->left_raw > TRACK_THRESHOLD ||
                 sensors->right_raw > TRACK_THRESHOLD)
@@ -842,94 +966,4 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
     }
 }
 
-void main(void)
-{
-    field_data_t sensors;
-    path_context_t context;
-    unsigned int i;
-    unsigned int loop;
-
-    field_sensor_reset(&sensors);
-
-    g_last_left_command = 0;
-    g_last_right_command = 0;
-    loop = 0U;
-
-    clock_init();
-    uart_init();
-    pwm_init();
-    adc_init();
-    hbridge_motor_init();
-
-    robot_auto_mode_init(&context, PATH_ID_1);
-
-    delayms(500U);
-    uart_puts("Robot starting up...\r\n");
-    uart_puts("--- RAW ADC DUMP (no filtering) ---\r\n");
-
-    for (i = 0U; i < 20U; ++i)
-    {
-        uart_puts("L=");
-        uart_print_int(adc_read(ADC_CH_LEFT), 4);
-        uart_puts("  R=");
-        uart_print_int(adc_read(ADC_CH_RIGHT), 4);
-        uart_puts("  IX=");
-        uart_print_int(adc_read(ADC_CH_INTERSECT), 4);
-        uart_puts("\r\n");
-        delayms(100U);
-    }
-
-    uart_puts("--- END DUMP, starting warmup ---\r\n");
-
-    for (i = 0U; i < 64U; ++i)
-    {
-        field_sensor_update(&sensors,
-            adc_read(ADC_CH_LEFT),
-            adc_read(ADC_CH_RIGHT),
-            adc_read(ADC_CH_INTERSECT));
-        delayms(2U);
-    }
-
-    uart_puts("Warmup done. Entering main loop.\r\n");
-
-    while (1)
-    {
-        field_sensor_update(&sensors,
-            adc_read(ADC_CH_LEFT),
-            adc_read(ADC_CH_RIGHT),
-            adc_read(ADC_CH_INTERSECT));
-
-        if ((loop % 5U) == 0U)
-        {
-            uart_puts("L r=");
-            uart_print_int(sensors.left_raw, 4);
-            uart_puts(" s=");
-            uart_print_int(sensors.left_signal, 4);
-            uart_puts(" d=");
-            uart_print_int(sensors.left_detected, 1);
-            uart_puts(" | R r=");
-            uart_print_int(sensors.right_raw, 4);
-            uart_puts(" s=");
-            uart_print_int(sensors.right_signal, 4);
-            uart_puts(" d=");
-            uart_print_int(sensors.right_detected, 1);
-            uart_puts(" | IX r=");
-            uart_print_int(sensors.intersection_raw, 4);
-            uart_puts(" | dir=");
-            uart_puts(movement_name(g_last_left_command, g_last_right_command));
-            uart_puts(" lc=");
-            uart_print_int(g_last_left_command, 4);
-            uart_puts(" rc=");
-            uart_print_int(g_last_right_command, 4);
-            uart_puts(" ix=");
-            uart_print_int(context.intersection_count, 1);
-            uart_puts("\r\n");
-        }
-
-        ++loop;
-
-        robot_auto_mode_step(&sensors, &context);
-
-        delayms(10U);
-    }
-}
+#endif
