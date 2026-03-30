@@ -20,7 +20,7 @@ static path_action_t g_active_action = PATH_STRAIGHT;
 
 static const path_action_t k_path_table[3][8] =
 {
-    { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_STOP,
+    { PATH_STRAIGHT, PATH_LEFT,     PATH_RIGHT,    PATH_STOP,
       PATH_STOP,     PATH_STOP,     PATH_STOP,     PATH_STOP },
     { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,
       PATH_STRAIGHT, PATH_STRAIGHT, PATH_STOP,     PATH_STOP },
@@ -40,7 +40,7 @@ enum
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
     STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 300
+    TURN_SPEED = 600
 };
 
 static int mix_samples(int previous, int sample, int keep_count)
@@ -319,6 +319,11 @@ void robot_auto_mode_set_path(path_context_t *context, path_id_t selected_path)
     context->intersection_count = 0;
 }
 
+robot_state_t robot_auto_mode_get_state(void)
+{
+    return g_state;
+}
+
 void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
 {
     int detected_now;
@@ -336,7 +341,7 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
                 if (g_active_action == PATH_LEFT || g_active_action == PATH_RIGHT)
                 {
                     run_path_action(g_active_action);
-                    delayms(700);
+                    delayms(900);
                     motor_stop();
                     g_state = ROBOT_AUTO_FOLLOW;
                 }

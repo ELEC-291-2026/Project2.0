@@ -68,5 +68,6 @@ void hbridge_motor_apply(const motor_command_t *command);
 void robot_auto_mode_init(path_context_t *context, path_id_t selected_path);
 void robot_auto_mode_set_path(path_context_t *context, path_id_t selected_path);
 void robot_auto_mode_step(field_data_t *sensors, path_context_t *context);
+robot_state_t robot_auto_mode_get_state(void);
 
 #endif
