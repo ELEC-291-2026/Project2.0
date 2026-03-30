@@ -266,7 +266,7 @@ void main(void)
 {
     hardware_init();
     
-    float counterMS = 0;
+    int counterMS = 0;
 	float normalized[2] = {0,0};
 	float translated_v[2] = {0,0};
 	
@@ -283,55 +283,63 @@ void main(void)
 	            counterMS++;
 	            wait_1us();
 	        }
-	        /*
-	        if(counterMS <= 500) {}
-	        else if(counterMS <= 1200)
+	        
+	        if(counterMS <= 2000) 
+	        {
+	        	goto end;
+	        }
+	        else if(counterMS <= 4000)
 	        {
 	        	translated_v[0] = counterMS - normalized[0];
 	        	
+	        	/*
 	        	if(translated_v[0] >=118)
 	        		translated_v[0] = 120;
 	        	else if(translated_v[0] <= -118)
 	        		translated_v[0] = -120;
 	        	else if(translated_v[0] <= 3 && translated_v[0] >= -3)
 	        		translated_v[0] = 0;
+	        	*/
 	        }
-	        else if(counterMS <=  2000)
+	        else if(counterMS <=  7000)
 	        {
 	        	translated_v[1] = counterMS - normalized[1];
 	        	
+	        	/*
 	        	if(translated_v[1] >=118)
 	        		translated_v[1] = 120;
 	        	else if(translated_v[1] <= -118)
 	        		translated_v[1] = -120;
 	        	else if(translated_v[1] <= 3 && translated_v[1] >= -3)
 	        		translated_v[1] = 0;
+	        	*/
 	        }
-	        else if(counterMS <=  3400)
+	        else if(counterMS <=  12500)
 	        {
+	        	
+	        	printf("AUTOMODE\n\r");
+	        	waitms(100);
 	        	goto end;
 	        }
 	        
-	        else if(counterMS <=  4000)
+	        else if(counterMS <=  25000)
 	    	{
 	    		counterNormalize = 3;
+	    		waitms(100);
 	    	}
 	        
 	        if(counterNormalize > 0)
 	    	{
 	    		counterNormalize--;
-	    		if(counterMS <= 1200)
+	    		if(counterMS <= 4000)
 					normalized[0] = counterMS;
-				else if(counterMS <= 2000)
+				else if(counterMS <= 7000)
 					normalized[1] = counterMS;
 	    	}
-	    	*/
-	    	printf("\r             %d, x: %d y: %d", (int)counterMS, (int)translated_v[0], (int)translated_v[1]);
+	    	
+	    	printf("Time: %d us, x: %d, y: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1]);
 	    }
-	    else{
-	        //printf("\rno");
-	    }
-	    //control(translated_v[0],translated_v[1]);
-	    //end:;
+	    //control(translated_v[0], translated_v[1]);
+	    end:;
    }
 }
