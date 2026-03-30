@@ -17,7 +17,7 @@ CPUFLAGS=-mcpu=cortex-m0plus -mthumb
 CFLAGS=$(CPUFLAGS) -O2 -g -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -Wall -Wextra -I. -I../Common/Include
 LDFLAGS=$(CPUFLAGS) -nostdlib -Wl,--gc-sections -Wl,--cref -Wl,-Map,$(TARGET).map -T ../Common/LDscripts/stm32l051xx_simple.ld -lgcc
 
-OBJS=main.o startup.o
+OBJS=main.o startup.o robot_auto_mode.o
 
 all: $(TARGET).hex
 
@@ -31,6 +31,9 @@ $(TARGET).hex: $(TARGET).elf
 
 main.o: main.c
 	$(CC) -c $(CFLAGS) main.c -o main.o
+
+robot_auto_mode.o: robot_auto_mode.c
+	$(CC) -c $(CFLAGS) robot_auto_mode.c -o robot_auto_mode.o
 
 startup.o: ../Common/Source/startup.c
 	$(CC) -c $(CFLAGS) ../Common/Source/startup.c -o startup.o

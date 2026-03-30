@@ -24,12 +24,12 @@
  * Higher amplifier gain usually means larger ADC swings, so these thresholds
  * should usually be raised as gain increases and lowered as gain decreases.
  */
-#define FIELD_SENSOR_TRACK_ENTRY_SIGNAL            60
-#define FIELD_SENSOR_TRACK_EXIT_SIGNAL             35
-#define FIELD_SENSOR_TRACK_STARTUP_MIN_FILTERED    80
-#define FIELD_SENSOR_INTERSECTION_ENTRY_SIGNAL     140
-#define FIELD_SENSOR_INTERSECTION_EXIT_SIGNAL      90
-#define FIELD_SENSOR_INTERSECTION_STARTUP_MIN_FILTERED 140
+#define FIELD_SENSOR_TRACK_ENTRY_SIGNAL            200
+#define FIELD_SENSOR_TRACK_EXIT_SIGNAL             100
+#define FIELD_SENSOR_TRACK_STARTUP_MIN_FILTERED    4096
+#define FIELD_SENSOR_INTERSECTION_ENTRY_SIGNAL     9999
+#define FIELD_SENSOR_INTERSECTION_EXIT_SIGNAL      100
+#define FIELD_SENSOR_INTERSECTION_STARTUP_MIN_FILTERED 4096
 
 /*
  * Replace this with the sample-time macro for your exact STM32 family.

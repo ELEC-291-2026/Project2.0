@@ -1,5 +1,6 @@
 #include "robot_auto_mode.h"
 #include "field_sensor_adc_config.h"
+#include "hbridge_motor.h"
 
 /*
  * Auto-mode starter based on the project slides:
@@ -29,15 +30,17 @@ static const path_action_t k_path_table[3][8] =
 
 enum
 {
-    BASE_SPEED = 600,
+    BASE_SPEED = 350,           /* forward drive speed (out of MAX_PWM) */
+    SLOW_SPEED = 0,             /* inner-wheel speed during a steer — full pivot */
     MAX_PWM = 1000,
-    DEADBAND = 15,
-    KP = 2,
+    STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
+    TRACK_THRESHOLD = 200,      /* raw ADC: either sensor above = wire visible */
+    INTERSECTION_THRESHOLD = 1500, /* raw ADC center sensor = intersection */
     FILTER_KEEP_COUNT = 3,
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
     STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 500
+    TURN_SPEED = 300
 };
 
 static int mix_samples(int previous, int sample, int keep_count)
@@ -162,7 +165,7 @@ static void motor_set_signed(int left_command, int right_command)
 
 static int intersection_detected(const field_data_t *sensors)
 {
-    return sensors->intersection_detected;
+    return sensors->intersection_raw > INTERSECTION_THRESHOLD;
 }
 
 static int intersection_started(path_context_t *context, int detected_now)
@@ -183,24 +186,22 @@ static int intersection_started(path_context_t *context, int detected_now)
 
 static void run_follow_controller(const field_data_t *sensors)
 {
-    int error;
-    int correction;
-    int left_pwm;
-    int right_pwm;
+    int diff = sensors->left_raw - sensors->right_raw;
 
-    error = sensors->left_signal - sensors->right_signal;
-
-    if (error < DEADBAND && error > -DEADBAND)
+    if (diff > STEER_DEADBAND)
     {
-        error = 0;
+        /* Wire is to the left — slow right wheel to steer left */
+        motor_set_signed(SLOW_SPEED, BASE_SPEED);
     }
-
-    correction = KP * error;
-
-    left_pwm = BASE_SPEED - correction;
-    right_pwm = BASE_SPEED + correction;
-
-    motor_set_signed(left_pwm, right_pwm);
+    else if (diff < -STEER_DEADBAND)
+    {
+        /* Wire is to the right — slow left wheel to steer right */
+        motor_set_signed(BASE_SPEED, SLOW_SPEED);
+    }
+    else
+    {
+        motor_set_signed(BASE_SPEED, BASE_SPEED);
+    }
 }
 
 static void run_path_action(path_action_t action)
@@ -312,6 +313,12 @@ void robot_auto_mode_init(path_context_t *context, path_id_t selected_path)
     path_context_reset(context, selected_path);
 }
 
+void robot_auto_mode_set_path(path_context_t *context, path_id_t selected_path)
+{
+    context->selected_path = selected_path;
+    context->intersection_count = 0;
+}
+
 void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
 {
     int detected_now;
@@ -321,14 +328,6 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
     switch (g_state)
     {
         case ROBOT_AUTO_FOLLOW:
-            if (!sensors->left_detected &&
-                !sensors->right_detected)
-            {
-                motor_stop();
-                g_state = ROBOT_AUTO_LOST;
-                break;
-            }
-
             if (intersection_started(context, detected_now))
             {
                 g_active_action = path_context_on_intersection(context);
@@ -361,14 +360,13 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             break;
 
         case ROBOT_AUTO_LOST:
-            if (sensors->left_detected || sensors->right_detected)
+            /* Keep steering — never stop while searching for the wire */
+            run_follow_controller(sensors);
+            if (sensors->left_raw > TRACK_THRESHOLD ||
+                sensors->right_raw > TRACK_THRESHOLD)
             {
                 g_state = ROBOT_AUTO_FOLLOW;
-                run_follow_controller(sensors);
-                break;
             }
-
-            motor_stop();
             break;
 
         case ROBOT_AUTO_STOP:
