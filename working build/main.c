@@ -496,6 +496,15 @@ void hbridge_motor_apply(const motor_command_t *command)
     motors_set(command->left_command, command->right_command);
 }
 
+
+void swap_paths(path_context_t *ctx)
+{
+	ctx->selected_path = (path_id_t)((ctx->selected_path + 1) % 3);
+	ctx->intersection_count = 0;
+    ctx->intersection_active = 0;
+}
+
+
 void main(void)
 {
     field_data_t sensors;
@@ -646,6 +655,10 @@ void main(void)
 	    		auto_mode = 0;
 	    		delayms(100);
 	    	}
+
+            else if(counterMS <= 99999){
+                swap_paths(&context);
+            }
 	        
 	        if(counterNormalize > 0)
 	    	{
