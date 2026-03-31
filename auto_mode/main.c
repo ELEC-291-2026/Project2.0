@@ -513,8 +513,10 @@ void main(void)
 
     uart_puts("Warmup done. Entering main loop.\r\n");
 
+    int auto_mode = 1;
     while (1)
     {
+        if(auto_mode == 1){
         field_sensor_update(&sensors,
             adc_read(ADC_CH_LEFT),
             adc_read(ADC_CH_RIGHT),
@@ -546,7 +548,11 @@ void main(void)
             uart_print_int(context.intersection_count, 1);
             uart_puts("\r\n");
         }
-
+    }
+        else{
+            remote
+        }
+        
         ++loop;
 
         /* Poll VL53L0X every 500ms — stop motors while obstacle within 200mm */
