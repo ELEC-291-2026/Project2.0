@@ -13,7 +13,9 @@
 #define LED_SIGNAL P1_7
 #define LED_SENSOR P1_6
 #define JOYSTICK_SW P2_0
-#define BUTTON P3_1
+#define BUTTON_1 P3_1
+#define BUTTON_2 P1_6
+#define BUTTON_3 P1_3
 
 unsigned char overflow_count;
 
@@ -145,7 +147,7 @@ void TIMER2_ISR(void) interrupt 5
 {
     TF2H = 0;       // Clear Timer 2 high byte overflow flag
     counterMS2++;     // Increment your 1ms counter
-    if(counterMS2 >= 50)
+    if(counterMS2 >= 145)
     {
     	quartSecFlag = 1;
     	counterMS2 = 0;
@@ -307,24 +309,40 @@ void main (void)
     while (1)
     {
 
-    	if(JOYSTICK_SW == 0)
+    	/*if(JOYSTICK_SW == 0)
     	
     	{
+    		buttonValue = 350;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
     		while(JOYSTICK_SW == 0){}
-    		buttonValue = 400;
-    		counterMS2 = -500;
-    		quartSecFlag = 0;
-    		overflow = 0;
-    	}
-    	
-		if(BUTTON == 0)
+    	}*/
+		if(BUTTON_1 == 0)
     	{
-    		buttonValue = 500;
+    		while(BUTTON_1 == 0){}
+    		buttonValue = 200;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
     	}
-    		
+    	else if(BUTTON_2 == 0)
+    	{
+    		while(BUTTON_2 == 0){}
+    		buttonValue = 250;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    	}
+    	else if(BUTTON_3 == 0)
+    	{
+    		while(BUTTON_3 == 0){}
+    		buttonValue = 300;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    	}
+    	/*	
 	    if(LED_SENSOR == 0)
 	    {
 	        counterMS = 0;
@@ -382,6 +400,7 @@ void main (void)
 	    	
 	        printf("\r%5.2f ms %.0f x, %.0f y               ", counterMS/100, translated_v[0], translated_v[1]);
 	    }
+	    */
 	    
 	    
 	    if(quartSecFlag == 1)
@@ -392,13 +411,13 @@ void main (void)
 	    	{
 	    		current_v[0] = Volts_at_Pin(QFP32_MUX_P2_2);
 	    		alternatingVolt = 1;
-	    		buttonValue = 100+10*current_v[0];
+	    		buttonValue = 25+10*current_v[0];
 	    	}
 	    	else if(alternatingVolt == 1)
 	    	{
 				current_v[1] = Volts_at_Pin(QFP32_MUX_P2_1);
 				alternatingVolt = 0;
-				buttonValue = 200+10*current_v[1];
+				buttonValue = 100+10*current_v[1];
 			}
 			
 			
@@ -408,33 +427,6 @@ void main (void)
 		
     }
 	
-}
-
-
-
-
-
-
-
-
-
-void wait_1us(void)
-{
-    // For SysTick info check the STM32L0xxx Cortex-M0 programming manual
-    // Load for 1 microsecond: (F_CPU / 1,000,000) - 1
-    SysTick->LOAD = (F_CPU/1000000L) - 1;  
-    SysTick->VAL = 0; 
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk; 
-    
-    // Wait for the COUNTFLAG (Bit 16) to be set
-    while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0); 
-    
-    SysTick->CTRL = 0; // Disable Systick counter
-}
-
-void waitus(int len)
-{
-    while(len--) wait_1us();
 }
 
 
