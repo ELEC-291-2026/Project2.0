@@ -2,6 +2,7 @@
 #include "robot_auto_mode.h"
 #include "collision_detector.h"
 #include "../vl53l0x.h"
+#include <stdio.h>
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
@@ -71,7 +72,7 @@ void wait_1us(void)
     // For SysTick info check the STM32L0xxx Cortex-M0 programming manual
     // Load for 1 microsecond: (SYSCLK_HZ / 1,000,000) - 1
     // At 32MHz, this puts 31 into the LOAD register (32 ticks total)
-    SysTick->LOAD = (SYSCLK_HZ / 1000000UL) - 1;  
+    SysTick->LOAD = (F_CPU / 1000000UL) - 1UL;  
     SysTick->VAL = 0; 
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk; 
     
@@ -337,6 +338,41 @@ static void motors_set(int left, int right)
     }
 }
 
+static void set_motor_outputs(int left_command, int right_command)
+{
+    if (left_command > 0)
+    {
+        g_motor_compare[0] = command_to_compare(left_command);
+        g_motor_compare[1] = 0U;
+    }
+    else if (left_command < 0)
+    {
+        g_motor_compare[0] = 0U;
+        g_motor_compare[1] = command_to_compare(left_command);
+    }
+    else
+    {
+        g_motor_compare[0] = 0U;
+        g_motor_compare[1] = 0U;
+    }
+
+    if (right_command > 0)
+    {
+        g_motor_compare[2] = command_to_compare(right_command);
+        g_motor_compare[3] = 0U;
+    }
+    else if (right_command < 0)
+    {
+        g_motor_compare[2] = 0U;
+        g_motor_compare[3] = command_to_compare(right_command);
+    }
+    else
+    {
+        g_motor_compare[2] = 0U;
+        g_motor_compare[3] = 0U;
+    }
+}
+
 void TIM2_Handler(void)
 {
     TIM2->SR &= ~TIM_SR_UIF;
@@ -501,6 +537,8 @@ void main(void)
     int obstacle_detected;
     unsigned int i;
     unsigned int loop;
+    
+        
 
     field_sensor_reset(&sensors);
 
@@ -550,6 +588,14 @@ void main(void)
     uart_puts("Warmup done. Entering main loop.\r\n");
 
     int auto_mode = 1;
+    int counterMS = 0;
+	float normalized[2] = {0,0};
+	float translated_v[2] = {0,0};
+	
+	// control var
+	int counterNormalize = 3;
+    
+    
     while (1)
     {
         if(LED_SENSOR_2 == 0 || LED_SENSOR == 0)
@@ -595,18 +641,18 @@ void main(void)
 	        else if(counterMS <=  12000)
 	    	{
 	    		counterNormalize = 3;
-	    		waitms(100);
+	    		delayms(100);
 	    	}
 	    	
 	    	else if(counterMS <=  15000)
 	    	{
-	    		automode = 1;
-	    		waitms(100);
+	    		auto_mode = 1;
+	    		delayms(100);
 	    	}
 	    	else if(counterMS <=  18000)
 	    	{
 	    		auto_mode = 0;
-	    		waitms(100);
+	    		delayms(100);
 	    	}
 	        
 	        if(counterNormalize > 0)
@@ -622,7 +668,9 @@ void main(void)
             {
                 control(translated_v[0],translated_v[1]);
             }
-	    	printf("Time: %6d us, x: %5d, y: %5d, Automode: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1], automode);
+	    	printf("Time: %6d us, x: %5d, y: %5d, Automode: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1], auto_mode);
+	    	
+	    	end:;
 	    }
         
         if(auto_mode == 1){
@@ -661,7 +709,7 @@ void main(void)
 
         ++loop;
 
-        /* Poll VL53L0X every 500ms — stop motors while obstacle within 200mm */
+        /* Poll VL53L0X every 500ms â€” stop motors while obstacle within 200mm */
         ++tof_poll_counter;
         if (tof_ok && tof_poll_counter >= 50U)
         {
