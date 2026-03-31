@@ -33,36 +33,6 @@
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
 #define PWM_PERIOD_COUNTS   1000U
-#define REMOTE_INPUT_MASK    BIT7
-#define REMOTE_AXIS_MAX      200
-#define REMOTE_PULSE_IGNORE_US 2000U
-#define REMOTE_PULSE_X_MAX_US 4000U
-#define REMOTE_PULSE_Y_MAX_US 7000U
-#define REMOTE_PULSE_CAL_MAX_US 30000U
-#define REMOTE_PULSE_TIMEOUT_US 35000U
-#define REMOTE_CALIBRATION_SAMPLES 3U
-#define REMOTE_ACTIVE_HOLD_LOOPS 30U
-#define REMOTE_AXIS_CLAMP_EDGE 190
-#define REMOTE_AXIS_DEADBAND 20
-
-typedef enum
-{
-    CONTROL_MODE_AUTO = 0,
-    CONTROL_MODE_REMOTE
-} control_mode_t;
-
-typedef struct
-{
-    int x_center_us;
-    int y_center_us;
-    int x_value;
-    int y_value;
-    unsigned int have_x_center;
-    unsigned int have_y_center;
-    unsigned int calibration_samples_remaining;
-    unsigned int active_hold_loops;
-    motor_command_t command;
-} remote_control_t;
 
 static int g_last_left_command;
 static int g_last_right_command;
@@ -96,19 +66,6 @@ static void set_motor_pin(unsigned int bit_mask, int active)
 void wait_1ms(void)
 {
     SysTick->LOAD = (F_CPU / 1000UL) - 1UL;
-    SysTick->VAL = 0;
-    SysTick->CTRL = 0x5;
-
-    while ((SysTick->CTRL & (1U << 16U)) == 0U)
-    {
-    }
-
-    SysTick->CTRL = 0;
-}
-
-static void wait_1us(void)
-{
-    SysTick->LOAD = (F_CPU / 1000000UL) - 1UL;
     SysTick->VAL = 0;
     SysTick->CTRL = 0x5;
 
@@ -406,199 +363,6 @@ static void adc_init(void)
     }
 }
 
-static void remote_input_init(void)
-{
-    RCC->IOPENR |= (1U << 0U);
-    GPIOA->MODER &= ~(3U << 14U);
-    GPIOA->PUPDR &= ~(3U << 14U);
-}
-
-static int remote_input_is_low(void)
-{
-    return (GPIOA->IDR & REMOTE_INPUT_MASK) == 0U;
-}
-
-static void remote_zero_command(remote_control_t *remote)
-{
-    remote->x_value = 0;
-    remote->y_value = 0;
-    remote->command.left_command = 0;
-    remote->command.right_command = 0;
-}
-
-static void remote_init(remote_control_t *remote)
-{
-    remote->x_center_us = 0;
-    remote->y_center_us = 0;
-    remote->have_x_center = 0U;
-    remote->have_y_center = 0U;
-    remote->calibration_samples_remaining = REMOTE_CALIBRATION_SAMPLES;
-    remote->active_hold_loops = 0U;
-    remote_zero_command(remote);
-}
-
-static unsigned int remote_measure_pulse_us(void)
-{
-    unsigned int pulse_width;
-
-    if (!remote_input_is_low())
-    {
-        return 0U;
-    }
-
-    pulse_width = 0U;
-    while (remote_input_is_low() && pulse_width < REMOTE_PULSE_TIMEOUT_US)
-    {
-        wait_1us();
-        ++pulse_width;
-    }
-
-    if (remote_input_is_low())
-    {
-        return REMOTE_PULSE_TIMEOUT_US;
-    }
-
-    return pulse_width;
-}
-
-static int remote_shape_axis(int delta)
-{
-    if (delta >= REMOTE_AXIS_CLAMP_EDGE)
-    {
-        return REMOTE_AXIS_MAX;
-    }
-
-    if (delta <= -REMOTE_AXIS_CLAMP_EDGE)
-    {
-        return -REMOTE_AXIS_MAX;
-    }
-
-    if (delta <= REMOTE_AXIS_DEADBAND && delta >= -REMOTE_AXIS_DEADBAND)
-    {
-        return 0;
-    }
-
-    return delta;
-}
-
-static void remote_refresh_command(remote_control_t *remote)
-{
-    int scaled_x;
-    int scaled_y;
-
-    scaled_x = (remote->x_value * 999) / REMOTE_AXIS_MAX;
-    scaled_y = (remote->y_value * 999) / REMOTE_AXIS_MAX;
-
-    remote->command.left_command = (scaled_y + scaled_x) / 3;
-    remote->command.right_command = (scaled_y - scaled_x) / 3;
-}
-
-static int remote_command_ready(const remote_control_t *remote)
-{
-    return remote->have_x_center &&
-        remote->have_y_center &&
-        (remote->calibration_samples_remaining == 0U);
-}
-
-static int remote_signal_present(const remote_control_t *remote)
-{
-    return remote->active_hold_loops > 0U;
-}
-
-static void remote_reset_calibration(remote_control_t *remote)
-{
-    remote->have_x_center = 0U;
-    remote->have_y_center = 0U;
-    remote->calibration_samples_remaining = REMOTE_CALIBRATION_SAMPLES;
-    remote_zero_command(remote);
-}
-
-static void remote_poll(remote_control_t *remote)
-{
-    unsigned int pulse_width;
-
-    pulse_width = remote_measure_pulse_us();
-
-    if (pulse_width == 0U)
-    {
-        if (remote->active_hold_loops > 0U)
-        {
-            --remote->active_hold_loops;
-        }
-        return;
-    }
-
-    if (pulse_width >= REMOTE_PULSE_TIMEOUT_US)
-    {
-        remote->active_hold_loops = 0U;
-        remote_zero_command(remote);
-        return;
-    }
-
-    if (pulse_width <= REMOTE_PULSE_IGNORE_US)
-    {
-        return;
-    }
-
-    remote->active_hold_loops = REMOTE_ACTIVE_HOLD_LOOPS;
-
-    if (pulse_width <= REMOTE_PULSE_X_MAX_US)
-    {
-        if (remote->calibration_samples_remaining > 0U || !remote->have_x_center)
-        {
-            remote->x_center_us = (int)pulse_width;
-            remote->have_x_center = 1U;
-            if (remote->calibration_samples_remaining > 0U)
-            {
-                --remote->calibration_samples_remaining;
-            }
-            remote_zero_command(remote);
-            return;
-        }
-
-        remote->x_value = remote_shape_axis((int)pulse_width - remote->x_center_us);
-    }
-    else if (pulse_width <= REMOTE_PULSE_Y_MAX_US)
-    {
-        if (remote->calibration_samples_remaining > 0U || !remote->have_y_center)
-        {
-            remote->y_center_us = (int)pulse_width;
-            remote->have_y_center = 1U;
-            if (remote->calibration_samples_remaining > 0U)
-            {
-                --remote->calibration_samples_remaining;
-            }
-            remote_zero_command(remote);
-            return;
-        }
-
-        remote->y_value = remote_shape_axis((int)pulse_width - remote->y_center_us);
-    }
-    else if (pulse_width <= REMOTE_PULSE_CAL_MAX_US)
-    {
-        remote_reset_calibration(remote);
-        return;
-    }
-    else
-    {
-        return;
-    }
-
-    if (remote_command_ready(remote))
-    {
-        remote_refresh_command(remote);
-    }
-    else
-    {
-        remote_zero_command(remote);
-    }
-}
-
-static const char *control_mode_name(control_mode_t mode)
-{
-    return (mode == CONTROL_MODE_REMOTE) ? "REMOTE" : "AUTO";
-}
-
 static int adc_read(int channel)
 {
     int sum;
@@ -696,8 +460,6 @@ void main(void)
     field_data_t sensors;
     path_context_t context;
     collision_detector_t collision;
-    remote_control_t remote;
-    control_mode_t mode;
     int tof_ok;
     unsigned int tof_poll_counter;
     int obstacle_detected;
@@ -713,13 +475,10 @@ void main(void)
     clock_init();
     uart_init();
     pwm_init();
-    remote_input_init();
     adc_init();
     motors_stop();
 
     robot_auto_mode_init(&context, PATH_ID_1);
-    remote_init(&remote);
-    mode = CONTROL_MODE_AUTO;
     tof_ok = collision_detector_init(&collision);
     tof_poll_counter = 0U;
     obstacle_detected = 0;
@@ -754,37 +513,22 @@ void main(void)
 
     uart_puts("Warmup done. Entering main loop.\r\n");
 
+    int auto_mode = 1;
+
     while (1)
     {
-        control_mode_t next_mode;
+        //mode selection
+        if (auto_mode == 1)
+        {
 
-        remote_poll(&remote);
-
+        
         field_sensor_update(&sensors,
             adc_read(ADC_CH_LEFT),
             adc_read(ADC_CH_RIGHT),
             adc_read(ADC_CH_INTERSECT));
 
-        next_mode = remote_signal_present(&remote) ?
-            CONTROL_MODE_REMOTE :
-            CONTROL_MODE_AUTO;
-
-        if (next_mode != mode)
-        {
-            motors_stop();
-            if (next_mode == CONTROL_MODE_AUTO &&
-                robot_auto_mode_get_state() != ROBOT_AUTO_STOP)
-            {
-                robot_auto_mode_resume(&context);
-            }
-            mode = next_mode;
-        }
-
         if ((loop % 5U) == 0U)
         {
-            uart_puts("mode=");
-            uart_puts(control_mode_name(mode));
-            uart_puts(" | ");
             uart_puts("L r=");
             uart_print_int(sensors.left_raw, 4);
             uart_puts(" s=");
@@ -807,13 +551,13 @@ void main(void)
             uart_print_int(g_last_right_command, 4);
             uart_puts(" ix=");
             uart_print_int(context.intersection_count, 1);
-            uart_puts(" rx=");
-            uart_print_int(remote.x_value, 4);
-            uart_puts(" ry=");
-            uart_print_int(remote.y_value, 4);
             uart_puts("\r\n");
         }
-
+        }
+        else
+        {
+        remote_control_update(...);   // read joystick / remote command
+        }
         ++loop;
 
         /* Poll VL53L0X every 500ms — stop motors while obstacle within 200mm */
@@ -831,17 +575,6 @@ void main(void)
         if (obstacle_detected)
         {
             motors_stop();
-        }
-        else if (mode == CONTROL_MODE_REMOTE)
-        {
-            if (remote_command_ready(&remote))
-            {
-                hbridge_motor_apply(&remote.command);
-            }
-            else
-            {
-                motors_stop();
-            }
         }
         else
         {

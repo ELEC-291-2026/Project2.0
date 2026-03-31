@@ -313,13 +313,6 @@ void robot_auto_mode_init(path_context_t *context, path_id_t selected_path)
     path_context_reset(context, selected_path);
 }
 
-void robot_auto_mode_resume(path_context_t *context)
-{
-    g_state = ROBOT_AUTO_FOLLOW;
-    g_active_action = PATH_STRAIGHT;
-    context->intersection_active = 0;
-}
-
 void robot_auto_mode_set_path(path_context_t *context, path_id_t selected_path)
 {
     context->selected_path = selected_path;
