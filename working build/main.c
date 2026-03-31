@@ -7,7 +7,7 @@
 #define ADC_CH_RIGHT        4
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          325
+#define BASE_SPEED          300
 #define TURN_SPEED          300
 #define MAX_PWM             1000
 #define KP                  2
@@ -565,10 +565,11 @@ void main(void)
 
     uart_puts("Warmup done. Entering main loop.\r\n");
 
-    int auto_mode = 0;
+    int auto_mode = 1;
     int counterMS = 0;
 	float normalized[2] = {0,0};
 	float translated_v[2] = {0,0};
+	int auto_counter = 0;
 	
 	// control var
 	int counterNormalize = 6;
@@ -674,8 +675,8 @@ void main(void)
 	    }
 
 
-
- 	if (auto_mode == 1)
+	
+ 	    if (auto_mode == 1)
         {
             field_sensor_update(&sensors,
 	            adc_read(ADC_CH_LEFT),
@@ -728,9 +729,10 @@ void main(void)
             **/
         }
 
-	        ++loop;
+	    ++loop;
 
         /* Poll VL53L0X every 500ms, stop motors while obstacle within 200mm */
+        /*
         ++tof_poll_counter;
         if (tof_ok && tof_poll_counter >= 50U)
         {
@@ -741,15 +743,24 @@ void main(void)
                 obstacle_detected = (dist_mm < 200U);
             }
         }
+        */
 
-	        if (obstacle_detected)
-	        {
-	            motors_stop();
-	        }
-	        else if (auto_mode == 1)
-	        {
-	            robot_auto_mode_step(&sensors, &context);
-	        }
-
+        if (obstacle_detected)
+        {
+            motors_stop();
+        }
+        else if (auto_mode == 1)
+        {
+        	auto_counter++;
+        	if(auto_counter >= 555)
+        	{
+            	robot_auto_mode_step(&sensors, &context);
+            	auto_counter = 0;
+            }
+        }
+		
+	     //delayms(10U);
+	        
+	    
 	}
 }
