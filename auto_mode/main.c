@@ -549,10 +549,11 @@ void main(void)
             uart_puts("\r\n");
         }
     }
-        else{
-            remote
-        }
-        
+        else
+    {
+        remote_control_update(...);   // read joystick / remote command
+    }
+
         ++loop;
 
         /* Poll VL53L0X every 500ms — stop motors while obstacle within 200mm */
