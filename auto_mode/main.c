@@ -573,7 +573,6 @@ void main(void)
 	            counterMS++;
 	            wait_1us();
 	        }
-	        
 	        if(counterMS <= 2000) 
 	        {
 	        	goto end;
@@ -632,14 +631,9 @@ void main(void)
 	    	}
 
 	    	end:;
+	    	
 	    }
-
-        if (auto_mode != previous_auto_mode)
-        {
-            motors_stop();
-            previous_auto_mode = auto_mode;
-        }
-	        
+ 
 	    if (auto_mode == 1)
         {
             field_sensor_update(&sensors,
