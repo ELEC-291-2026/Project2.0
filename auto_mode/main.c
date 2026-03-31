@@ -34,6 +34,9 @@
 #define SOFTWARE_PWM_TICK_HZ 100000UL
 #define PWM_PERIOD_COUNTS   1000U
 
+#define LED_SENSOR ((GPIOA->IDR >> 7) & 1U)
+#define LED_SENSOR_2 (GPIOB->IDR & 1U)
+
 static int g_last_left_command;
 static int g_last_right_command;
 static volatile unsigned int g_motor_compare[4];
@@ -61,6 +64,21 @@ static void set_motor_pin(unsigned int bit_mask, int active)
         GPIOA->ODR &= ~bit_mask;
     }
 #endif
+}
+
+void wait_1us(void)
+{
+    // For SysTick info check the STM32L0xxx Cortex-M0 programming manual
+    // Load for 1 microsecond: (SYSCLK_HZ / 1,000,000) - 1
+    // At 32MHz, this puts 31 into the LOAD register (32 ticks total)
+    SysTick->LOAD = (SYSCLK_HZ / 1000000UL) - 1;  
+    SysTick->VAL = 0; 
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk; 
+    
+    // Wait for the COUNTFLAG (Bit 16) to be set
+    while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0); 
+    
+    SysTick->CTRL = 0; // Disable Systick counter
 }
 
 void wait_1ms(void)
@@ -116,6 +134,13 @@ static void uart_init(void)
     GPIOA->MODER |= (2U << 18U);
     GPIOA->AFR[1] &= ~(0xFU << 4U);
     GPIOA->AFR[1] |= (4U << 4U);
+
+        
+    // PA7 setup
+	GPIOA->MODER &= ~(3U << 14); // Clear bits 14 and 15 to set PA7 to 'Input Mode'
+	
+	   // PB0 setup
+	GPIOB->MODER &= ~(3U << 0);
 
     USART1->BRR = 278U;
     USART1->CR1 = (1U << 3U) | (1U << 0U);
@@ -448,6 +473,17 @@ static const char *movement_name(int left, int right)
     return "ARC_LEFT";
 }
 
+static void control(int x, int y)
+{
+	//we convert to new system where left is controlled by x+y, and right by x-y
+	int scaled_x = x*999/400;
+	int scaled_y = y*999/200;
+	
+	int left = (scaled_y+scaled_x);
+	int right = (scaled_y-scaled_x);
+	
+	set_motor_outputs(left, right);
+}
 
 /* Bridge called by robot_auto_mode.c to drive the physical motors. */
 void hbridge_motor_apply(const motor_command_t *command)
@@ -516,43 +552,112 @@ void main(void)
     int auto_mode = 1;
     while (1)
     {
+        if(LED_SENSOR_2 == 0 || LED_SENSOR == 0)
+	    {
+	        counterMS = 0;
+	        while(LED_SENSOR_2 == 0 || LED_SENSOR == 0)
+	        {
+	            counterMS++;
+	            wait_1us();
+	        }
+	        
+	        if(counterMS <= 2000) 
+	        {
+	        	goto end;
+	        }
+	        else if(counterMS <= 4400)
+	        {
+	        	translated_v[0] = counterMS - normalized[0];
+	        	
+	        	if(translated_v[0] >=230 || translated_v[0] <= -230)
+	        		translated_v[0] = 0;
+	        	if(translated_v[0] >=190)
+	        		translated_v[0] = 200;
+	        	else if(translated_v[0] <= -190)
+	        		translated_v[0] = -200;
+	        	else if(translated_v[0] <= 15 && translated_v[0] >= -15)
+	        		translated_v[0] = 0;
+	        }
+	        else if(counterMS <=  7000)
+	        {
+	        	translated_v[1] = counterMS - normalized[1];
+	        	
+	        	if(translated_v[1] >=230 || translated_v[1] <= -230)
+	        		translated_v[1] = 0;
+	        	else if(translated_v[1] >=190)
+	        		translated_v[1] = 200;
+	        	else if(translated_v[1] <= -190)
+	        		translated_v[1] = -200;
+	        	else if(translated_v[1] <= 15 && translated_v[1] >= -15)
+	        		translated_v[1] = 0;
+	        	
+	        }
+	        else if(counterMS <=  12000)
+	    	{
+	    		counterNormalize = 3;
+	    		waitms(100);
+	    	}
+	    	
+	    	else if(counterMS <=  15000)
+	    	{
+	    		automode = 1;
+	    		waitms(100);
+	    	}
+	    	else if(counterMS <=  18000)
+	    	{
+	    		auto_mode = 0;
+	    		waitms(100);
+	    	}
+	        
+	        if(counterNormalize > 0)
+	    	{
+	    		counterNormalize--;
+	    		if(counterMS <= 4000)
+					normalized[0] = counterMS;
+				else if(counterMS <= 7000)
+					normalized[1] = counterMS;
+	    	}
+
+            if(auto_mode == 0)
+            {
+                control(translated_v[0],translated_v[1]);
+            }
+	    	printf("Time: %6d us, x: %5d, y: %5d, Automode: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1], automode);
+	    }
+        
         if(auto_mode == 1){
         field_sensor_update(&sensors,
             adc_read(ADC_CH_LEFT),
             adc_read(ADC_CH_RIGHT),
             adc_read(ADC_CH_INTERSECT));
 
-        if ((loop % 5U) == 0U)
-        {
-            uart_puts("L r=");
-            uart_print_int(sensors.left_raw, 4);
-            uart_puts(" s=");
-            uart_print_int(sensors.left_signal, 4);
-            uart_puts(" d=");
-            uart_print_int(sensors.left_detected, 1);
-            uart_puts(" | R r=");
-            uart_print_int(sensors.right_raw, 4);
-            uart_puts(" s=");
-            uart_print_int(sensors.right_signal, 4);
-            uart_puts(" d=");
-            uart_print_int(sensors.right_detected, 1);
-            uart_puts(" | IX r=");
-            uart_print_int(sensors.intersection_raw, 4);
-            uart_puts(" | dir=");
-            uart_puts(movement_name(g_last_left_command, g_last_right_command));
-            uart_puts(" lc=");
-            uart_print_int(g_last_left_command, 4);
-            uart_puts(" rc=");
-            uart_print_int(g_last_right_command, 4);
-            uart_puts(" ix=");
-            uart_print_int(context.intersection_count, 1);
-            uart_puts("\r\n");
+            if ((loop % 5U) == 0U)
+            {
+                uart_puts("L r=");
+                uart_print_int(sensors.left_raw, 4);
+                uart_puts(" s=");
+                uart_print_int(sensors.left_signal, 4);
+                uart_puts(" d=");
+                uart_print_int(sensors.left_detected, 1);
+                uart_puts(" | R r=");
+                uart_print_int(sensors.right_raw, 4);
+                uart_puts(" s=");
+                uart_print_int(sensors.right_signal, 4);
+                uart_puts(" d=");
+                uart_print_int(sensors.right_detected, 1);
+                uart_puts(" | IX r=");
+                uart_print_int(sensors.intersection_raw, 4);
+                uart_puts(" | dir=");
+                uart_puts(movement_name(g_last_left_command, g_last_right_command));
+                uart_puts(" lc=");
+                uart_print_int(g_last_left_command, 4);
+                uart_puts(" rc=");
+                uart_print_int(g_last_right_command, 4);
+                uart_puts(" ix=");
+                uart_print_int(context.intersection_count, 1);
+                uart_puts("\r\n");
+            }
         }
-    }
-        else
-    {
-        remote_control_update(...);   // read joystick / remote command
-    }
 
         ++loop;
 
