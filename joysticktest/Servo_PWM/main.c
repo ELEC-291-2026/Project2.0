@@ -10,7 +10,28 @@
 #define PWM_PERIOD_COUNTS   1000U
 #define MOTOR_COMMAND_MAX  1000
 #define LED_SENSOR ((GPIOA->IDR >> 7) & 1U)
+#define LED_SENSOR_2 (GPIOB->IDR & 1U)
 
+
+// LQFP32 pinout
+//             ----------
+//       VDD -|1       32|- VSS
+//      PC14 -|2       31|- BOOT0
+//      PC15 -|3       30|- PB7
+//      NRST -|4       29|- PB6
+//      VDDA -|5       28|- PB5
+//       PA0 -|6       27|- PB4
+//       PA1 -|7       26|- PB3
+//       PA2 -|8       25|- PA15
+//       PA3 -|9       24|- PA14
+//       PA4 -|10      23|- PA13
+//       PA5 -|11      22|- PA12
+//       PA6 -|12      21|- PA11
+//       PA7 -|13      20|- PA10 (Reserved for RXD)
+//       PB0 -|14      19|- PA9  (Reserved for TXD)
+//       PB1 -|15      18|- PA8  (LED+1k)
+//       VSS -|16      17|- VDD
+//             ----------
 /*
  * STM32L051K8 LQFP32 pin map used here:
  * - PA0 (pin 6)  -> left motor forward
@@ -196,8 +217,13 @@ static void hardware_init(void)
     // MODER6 uses bits [13:12]. Writing 00 sets it to Input.
     GPIOB->MODER &= ~(3U << 14); 
     
+    
     // PA7 setup
 	GPIOA->MODER &= ~(3U << 14); // Clear bits 14 and 15 to set PA7 to 'Input Mode'
+	
+	   // PB0 setup
+	GPIOB->MODER &= ~(3U << 0);
+	
 }
 
 void TIM2_Handler(void)
@@ -251,11 +277,11 @@ void TIM2_Handler(void)
 static void control(int x, int y)
 {
 	//we convert to new system where left is controlled by x+y, and right by x-y
-	int scaled_x = x*999/200;
+	int scaled_x = x*999/400;
 	int scaled_y = y*999/200;
 	
-	int left = (scaled_y+scaled_x)/3;
-	int right = (scaled_y-scaled_x)/3;
+	int left = (scaled_y+scaled_x);
+	int right = (scaled_y-scaled_x);
 	
 	set_motor_outputs(left, right);
 }
@@ -268,16 +294,18 @@ void main(void)
     int counterMS = 0;
 	float normalized[2] = {0,0};
 	float translated_v[2] = {0,0};
+	int automode = 0;
 	
 	// control var
 	int counterNormalize = 3;
 
     while (1)
     {
-        if(LED_SENSOR == 0)
+
+        if(LED_SENSOR_2 == 0 || LED_SENSOR == 0)
 	    {
 	        counterMS = 0;
-	        while(LED_SENSOR == 0)
+	        while(LED_SENSOR_2 == 0 || LED_SENSOR == 0)
 	        {
 	            counterMS++;
 	            wait_1us();
@@ -287,33 +315,47 @@ void main(void)
 	        {
 	        	goto end;
 	        }
-	        else if(counterMS <= 4000)
+	        else if(counterMS <= 4400)
 	        {
 	        	translated_v[0] = counterMS - normalized[0];
 	        	
+	        	if(translated_v[0] >=230 || translated_v[0] <= -230)
+	        		translated_v[0] = 0;
 	        	if(translated_v[0] >=190)
 	        		translated_v[0] = 200;
 	        	else if(translated_v[0] <= -190)
 	        		translated_v[0] = -200;
-	        	else if(translated_v[0] <= 20 && translated_v[0] >= -20)
+	        	else if(translated_v[0] <= 15 && translated_v[0] >= -15)
 	        		translated_v[0] = 0;
 	        }
 	        else if(counterMS <=  7000)
 	        {
 	        	translated_v[1] = counterMS - normalized[1];
 	        	
-	        	
-	        	if(translated_v[1] >=190)
+	        	if(translated_v[1] >=230 || translated_v[1] <= -230)
+	        		translated_v[1] = 0;
+	        	else if(translated_v[1] >=190)
 	        		translated_v[1] = 200;
 	        	else if(translated_v[1] <= -190)
 	        		translated_v[1] = -200;
-	        	else if(translated_v[1] <= 20 && translated_v[1] >= -20)
+	        	else if(translated_v[1] <= 15 && translated_v[1] >= -15)
 	        		translated_v[1] = 0;
 	        	
 	        }
-	        else if(counterMS <=  30000)
+	        else if(counterMS <=  12000)
 	    	{
 	    		counterNormalize = 3;
+	    		waitms(100);
+	    	}
+	    	
+	    	else if(counterMS <=  15000)
+	    	{
+	    		automode = 1;
+	    		waitms(100);
+	    	}
+	    	else if(counterMS <=  18000)
+	    	{
+	    		automode = 0;
 	    		waitms(100);
 	    	}
 	        
@@ -326,9 +368,13 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 	    	
-	    	printf("Time: %6d us, x: %5d, y: %5d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1]);
+	    	printf("Time: %6d us, x: %5d, y: %5d, Automode: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1], automode);
 	    	control(translated_v[0],translated_v[1]);
 	    }
+	    
+	    
+	    	
+	    
 	    end:;
 	    
    }
