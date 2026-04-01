@@ -22,8 +22,8 @@ static path_action_t g_active_action = PATH_STRAIGHT;
 
 static const path_action_t k_path_table[3][8] =
 {
-    { PATH_STRAIGHT, PATH_LEFT,     PATH_RIGHT,    PATH_STOP,
-      PATH_STOP,     PATH_STOP,     PATH_STOP,     PATH_STOP },
+    { PATH_STRAIGHT, PATH_LEFT,     PATH_LEFT,    PATH_STRAIGHT,
+      PATH_RIGHT,     PATH_LEFT,     PATH_RIGHT,     PATH_STOP },
     { PATH_LEFT,     PATH_RIGHT,    PATH_LEFT,     PATH_RIGHT,
       PATH_STRAIGHT, PATH_STRAIGHT, PATH_STOP,     PATH_STOP },
     { PATH_RIGHT,    PATH_STRAIGHT, PATH_RIGHT,    PATH_LEFT,
@@ -42,7 +42,7 @@ enum
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
     STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 600
+    TURN_SPEED = 620
 };
 
 static int mix_samples(int previous, int sample, int keep_count)

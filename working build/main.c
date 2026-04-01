@@ -28,7 +28,7 @@
 
 #define LEFT_MOTOR_SIGN     -1
 #define RIGHT_MOTOR_SIGN    -1
-#define LEFT_MOTOR_TRIM_PCT  120  /* boost left motor by 20% to compensate for weakness */
+#define LEFT_MOTOR_TRIM_PCT  125  /* boost left motor by 20% to compensate for weakness */
 #define MOTOR_OUTPUT_ACTIVE_LOW 1
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
@@ -527,9 +527,9 @@ static void led_flash(unsigned int pin_bit, unsigned int times)
     for (i = 0; i < times; i++)
     {
         GPIOB->ODR |=  pin_bit;
-        delayms(40);
+        delayms(60);
         GPIOB->ODR &= ~pin_bit;
-        delayms(40);
+        delayms(60);
     }
 }
 
