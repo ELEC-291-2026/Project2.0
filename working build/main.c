@@ -39,6 +39,9 @@
 #define STATUS_LED_GPIO_PORT GPIOA
 #define STATUS_LED_PIN       (1U << 8U)
 
+#define LED_LEFT_TURN   (1U << 5U)  // PB5 — pin 28
+#define LED_RIGHT_TURN  (1U << 6U)  // PB6 — pin 29 (NOTE: conflicts with I2C1_SCL when ToF is wired)
+
 
 
 // LQFP32 pinout
@@ -66,6 +69,10 @@ static int g_last_right_command;
 static volatile unsigned int g_motor_compare[4];
 static volatile unsigned int g_pwm_counter;
 
+// Turn signal blink state: -1 = blink left, 0 = off, +1 = blink right
+#define BLINK_HALF_PERIOD 10000U  // 100kHz / 10000 = toggle every 0.1s = 5Hz blink
+static volatile int g_turn_state;
+static volatile unsigned int g_blink_counter;
 
 static void set_motor_pin(unsigned int bit_mask, int active)
 {
@@ -373,6 +380,29 @@ void TIM2_Handler(void)
     {
         g_pwm_counter = 0U;
     }
+
+    // Blink turn-signal LEDs
+    ++g_blink_counter;
+    if (g_blink_counter >= BLINK_HALF_PERIOD)
+    {
+        g_blink_counter = 0U;
+
+        if (g_turn_state < 0)
+        {
+            GPIOB->ODR ^= LED_LEFT_TURN;   // toggle left LED
+            GPIOB->ODR &= ~LED_RIGHT_TURN; // right stays off
+        }
+        else if (g_turn_state > 0)
+        {
+            GPIOB->ODR ^= LED_RIGHT_TURN;  // toggle right LED
+            GPIOB->ODR &= ~LED_LEFT_TURN;  // left stays off
+        }
+        else
+        {
+            GPIOB->ODR &= ~LED_LEFT_TURN;  // both off
+            GPIOB->ODR &= ~LED_RIGHT_TURN;
+        }
+    }
 }
 
 
@@ -607,6 +637,16 @@ void main(void)
     GPIOB->MODER |=  (1U << 8U);   // output mode for PB4
     GPIOB->ODR   &= ~(1U << 4U);   // start low
 
+    // Left turn signal on PB5 (pin 28)
+    GPIOB->MODER &= ~(3U << 10U);  // clear bits 10-11 (PB5)
+    GPIOB->MODER |=  (1U << 10U);  // output mode for PB5
+    GPIOB->ODR   &= ~(1U << 5U);   // start low
+
+    // Right turn signal on PB6 (pin 29)
+    GPIOB->MODER &= ~(3U << 12U);  // clear bits 12-13 (PB6)
+    GPIOB->MODER |=  (1U << 12U);  // output mode for PB6
+    GPIOB->ODR   &= ~(1U << 6U);   // start low
+
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
     for (i = 0U; i < 64U; ++i)
@@ -816,8 +856,22 @@ void main(void)
 	        }
         }
 		
+	    // Update turn signal blink direction (ISR does the actual blinking)
+	    if (g_last_left_command < g_last_right_command)
+	    {
+	        g_turn_state = -1;  // blink left
+	    }
+	    else if (g_last_right_command < g_last_left_command)
+	    {
+	        g_turn_state = 1;   // blink right
+	    }
+	    else
+	    {
+	        g_turn_state = 0;   // both off
+	    }
+
 	     //delayms(10U);
-	        
-	    
+
+
 	}
 }
