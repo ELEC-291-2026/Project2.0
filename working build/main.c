@@ -1,7 +1,7 @@
-#include "stm32l051xx.h"
+#include "../Common/Include/stm32l051xx.h"
 #include "robot_auto_mode.h"
 #include "collision_detector.h"
-#include "../vl53l0x.h"
+#include "vl53l0x.h"
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
@@ -496,12 +496,26 @@ void hbridge_motor_apply(const motor_command_t *command)
     motors_set(command->left_command, command->right_command);
 }
 
+static void led_flash(unsigned int pin_bit, unsigned int times)
+{
+    unsigned int i;
+    for (i = 0; i < times; i++)
+    {
+        GPIOB->ODR |=  pin_bit;
+        delayms(40);
+        GPIOB->ODR &= ~pin_bit;
+        delayms(40);
+    }
+}
+
 
 void swap_paths(path_context_t *ctx)
 {
 	ctx->selected_path = (path_id_t)((ctx->selected_path + 1) % 3);
 	ctx->intersection_count = 0;
     ctx->intersection_active = 0;
+
+    led_flash((1U<<6U), ctx->selected_path+1);
 }
 
 
@@ -555,11 +569,17 @@ void main(void)
         delayms(100U);
     }
     
-                // PA7 setup
+    // PA7 setup
 	GPIOA->MODER &= ~(3U << 14); // Clear bits 14 and 15 to set PA7 to 'Input Mode'
 	
-	   // PB0 setup
+	// PB0 setup
 	GPIOB->MODER &= ~(3U << 0);
+
+    // LED on PB6
+    GPIOB->MODER &= ~(3U << 12U);   // clear bits 12-13
+    GPIOB->MODER |=  (1U << 12U);   // output mode
+    GPIOB->ODR   &= ~(1U << 6U);    // start low
+
 
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
