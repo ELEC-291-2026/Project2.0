@@ -34,8 +34,30 @@
 #define SOFTWARE_PWM_TICK_HZ 100000UL
 #define PWM_PERIOD_COUNTS   1000U
 
-#define LED_SENSOR ((GPIOA->IDR >> 7) & 1U)
+#define LED_SENSOR ((GPIOB->IDR >> 1) & 1U)
 #define LED_SENSOR_2 (GPIOB->IDR & 1U)
+
+
+
+// LQFP32 pinout
+//             ----------
+//       VDD -|1       32|- VSS
+//      PC14 -|2       31|- BOOT0
+//      PC15 -|3       30|- PB7
+//      NRST -|4       29|- PB6
+//      VDDA -|5       28|- PB5
+//       PA0 -|6       27|- PB4
+//       PA1 -|7       26|- PB3
+//       PA2 -|8       25|- PA15
+//       PA3 -|9       24|- PA14
+//       PA4 -|10      23|- PA13
+//       PA5 -|11      22|- PA12
+//       PA6 -|12      21|- PA11
+//       PA7 -|13      20|- PA10 (Reserved for RXD)
+//       PB0 -|14      19|- PA9  (Reserved for TXD)
+//       PB1 -|15      18|- PA8  (LED+1k)
+//       VSS -|16      17|- VDD
+//             ----------
 
 static int g_last_left_command;
 static int g_last_right_command;
@@ -508,16 +530,14 @@ static void led_flash(unsigned int pin_bit, unsigned int times)
     }
 }
 
-
 void swap_paths(path_context_t *ctx)
 {
 	ctx->selected_path = (path_id_t)((ctx->selected_path + 1) % 3);
 	ctx->intersection_count = 0;
     ctx->intersection_active = 0;
-
+    
     led_flash((1U<<6U), ctx->selected_path+1);
 }
-
 
 void main(void)
 {
@@ -549,6 +569,7 @@ void main(void)
 
     robot_auto_mode_init(&context, PATH_ID_1);
     tof_ok = collision_detector_init(&collision);
+    if(tof_ok) vl53l0x_start_continuous();
     tof_poll_counter = 0U;
     obstacle_detected = 0;
 
@@ -569,17 +590,22 @@ void main(void)
         delayms(100U);
     }
     
-    // PA7 setup
-	GPIOA->MODER &= ~(3U << 14); // Clear bits 14 and 15 to set PA7 to 'Input Mode'
+	// Enable GPIOB Clock 
+	RCC->IOPENR |= (1U << 1U); 
 	
-	// PB0 setup
-	GPIOB->MODER &= ~(3U << 0);
-
-    // LED on PB6
+	// PB1 and PB0 setup: Set to Input Mode (00)
+	GPIOB->MODER &= ~((3U << 2) | (3U << 0));
+	
+	// --- ADD THIS SECTION ---
+	// Enable Internal Pull-up resistors for PB0 and PB1
+	// PUPDR bits: 01 = Pull-up, 10 = Pull-down, 00 = None
+	GPIOB->PUPDR &= ~((3U << 2) | (3U << 0)); // Clear bits
+	GPIOB->PUPDR |=  ((1U << 2) | (1U << 0)); // Set to 01 (Pull-up)
+	
+	    // LED on PB6
     GPIOB->MODER &= ~(3U << 12U);   // clear bits 12-13
     GPIOB->MODER |=  (1U << 12U);   // output mode
     GPIOB->ODR   &= ~(1U << 6U);    // start low
-
 
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
@@ -675,8 +701,7 @@ void main(void)
 	    		auto_mode = 0;
 	    		delayms(100);
 	    	}
-
-            else if(counterMS <= 99999){
+	    	else if(counterMS <= 52000){
                 swap_paths(&context);
             }
 	        
@@ -702,6 +727,7 @@ void main(void)
 	        uart_print_int(counterMS, 7);
 	        uart_puts("   automode:");
 	        uart_print_int(auto_mode, 2);
+	        
 	        
 	    	end:;
 	    	
@@ -764,20 +790,15 @@ void main(void)
 
 	    ++loop;
 
-        /* Poll VL53L0X every 500ms, stop motors while obstacle within 200mm */
-        /*
-        ++tof_poll_counter;
-        if (tof_ok && tof_poll_counter >= 50U)
-        {
-            uint16_t dist_mm;
-            tof_poll_counter = 0U;
-            if (vl53l0x_read_range_single(&dist_mm))
-            {
-                obstacle_detected = (dist_mm < 200U);
-            }
-        }
-        */
-
+		// In the main loop, use the detector struct you already built:
+		/*
+		if (tof_ok) 
+		{
+			collision_detector_update(&collision); 
+			obstacle_detected = collision.obstacle_detected;
+		}
+		*/
+		
         if (obstacle_detected)
         {
             motors_stop();
