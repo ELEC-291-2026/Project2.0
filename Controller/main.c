@@ -16,6 +16,7 @@
 #define BUTTON_1 P3_1
 #define BUTTON_2 P1_6
 #define BUTTON_3 P1_3
+#define BUTTON_4 P1_0
 
 unsigned char overflow_count;
 
@@ -338,6 +339,14 @@ void main (void)
     	{
     		while(BUTTON_3 == 0){}
     		buttonValue = 300;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    	}
+		else if(BUTTON_4 == 0)
+    	{
+    		while(BUTTON_4 == 0){}
+    		buttonValue = 350;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
