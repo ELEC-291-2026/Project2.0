@@ -28,6 +28,7 @@
 
 #define LEFT_MOTOR_SIGN     -1
 #define RIGHT_MOTOR_SIGN    -1
+#define LEFT_MOTOR_TRIM_PCT  115  /* boost left motor by 15% to compensate for weakness */
 #define MOTOR_OUTPUT_ACTIVE_LOW 1
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
@@ -329,6 +330,7 @@ static void motors_set(int left, int right)
     g_last_left_command = left;
     g_last_right_command = right;
 
+    left = left * LEFT_MOTOR_TRIM_PCT / 100;
     left *= LEFT_MOTOR_SIGN;
     right *= RIGHT_MOTOR_SIGN;
 
@@ -786,9 +788,9 @@ void main(void)
 
 	    ++loop;
 
-		if (tof_ok) 
+		if (tof_ok && (loop % 3000U) == 0U)
 		{
-			collision_detector_update(&collision); 
+			collision_detector_update(&collision);
 		}
 		
         if (tof_ok && collision.obstacle_detected)

@@ -32,7 +32,7 @@ static const path_action_t k_path_table[3][8] =
 
 enum
 {
-    BASE_SPEED = 420,           /* forward drive speed (out of MAX_PWM) */
+    BASE_SPEED = 600,           /* forward drive speed (out of MAX_PWM) */
     SLOW_SPEED = 0,             /* inner-wheel speed during a steer — full pivot */
     MAX_PWM = 1000,
     STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
