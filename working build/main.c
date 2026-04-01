@@ -28,7 +28,7 @@
 
 #define LEFT_MOTOR_SIGN     -1
 #define RIGHT_MOTOR_SIGN    -1
-#define LEFT_MOTOR_TRIM_PCT  115  /* boost left motor by 15% to compensate for weakness */
+#define LEFT_MOTOR_TRIM_PCT  120  /* boost left motor by 20% to compensate for weakness */
 #define MOTOR_OUTPUT_ACTIVE_LOW 1
 
 #define SOFTWARE_PWM_TICK_HZ 100000UL
@@ -712,9 +712,13 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 
-	        if (auto_mode == 0 && !(tof_ok && collision.obstacle_detected))
+	        if (auto_mode == 0)
 	        {
-	            control((int)translated_v[0], (int)translated_v[1]);
+	        	int cx = (int)translated_v[0];
+	        	int cy = (int)translated_v[1];
+	        	if (tof_ok && collision.obstacle_detected && cy > 0)
+	        		cy = 0;
+	            control(cx, cy);
 	        }
 	        
 			uart_puts("\n\r x: ");
@@ -788,23 +792,26 @@ void main(void)
 
 	    ++loop;
 
-		if (tof_ok && (loop % 3000U) == 0U)
+		if (tof_ok && (auto_mode == 0 || (loop % 3000U) == 0U))
 		{
 			collision_detector_update(&collision);
 		}
 		
-        if (tof_ok && collision.obstacle_detected)
+        if (auto_mode == 1)
         {
-            motors_stop();
-        }
-        else if (auto_mode == 1)
-        {
-        	auto_counter++;
-        	if(auto_counter >= 555)
+        	if (tof_ok && collision.obstacle_detected)
         	{
-            	robot_auto_mode_step(&sensors, &context);
-            	auto_counter = 0;
-            }
+        		motors_stop();
+        	}
+        	else
+        	{
+	        	auto_counter++;
+	        	if(auto_counter >= 555)
+	        	{
+	            	robot_auto_mode_step(&sensors, &context);
+	            	auto_counter = 0;
+	            }
+	        }
         }
 		
 	     //delayms(10U);
