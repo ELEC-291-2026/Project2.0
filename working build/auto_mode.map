@@ -1,0 +1,600 @@
+Archive member included to satisfy reference by file (symbol)
+
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                              main.o (__aeabi_uidiv)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                              main.o (__aeabi_idiv)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                              /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+                              main.o (__aeabi_fcmple)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+                              /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o) (__eqsf2)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+                              /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o) (__gesf2)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+                              /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o) (__lesf2)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+                              main.o (__aeabi_fsub)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+                              main.o (__aeabi_f2iz)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+                              main.o (__aeabi_i2f)
+/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+                              /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o) (__clzsi2)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 main.o
+ .data          0x00000000        0x0 main.o
+ .bss           0x00000000        0x0 main.o
+ .text.wait_1us
+                0x00000000       0x24 main.o
+ .text.wait_1ms
+                0x00000000       0x28 main.o
+ .text          0x00000000        0x0 startup.o
+ .data          0x00000000        0x0 startup.o
+ .bss           0x00000000        0x0 startup.o
+ .text          0x00000000        0x0 robot_auto_mode.o
+ .data          0x00000000        0x0 robot_auto_mode.o
+ .bss           0x00000000        0x0 robot_auto_mode.o
+ .text.path_context_reset
+                0x00000000        0xc robot_auto_mode.o
+ .text.path_context_on_intersection
+                0x00000000       0x20 robot_auto_mode.o
+ .text.robot_auto_mode_set_path
+                0x00000000        0x8 robot_auto_mode.o
+ .text.robot_auto_mode_get_state
+                0x00000000        0xc robot_auto_mode.o
+ .text          0x00000000        0x0 collision_detector.o
+ .data          0x00000000        0x0 collision_detector.o
+ .bss           0x00000000        0x0 collision_detector.o
+ .text.collision_detector_reset
+                0x00000000        0xc collision_detector.o
+ .text          0x00000000        0x0 vl53l0x.o
+ .data          0x00000000        0x0 vl53l0x.o
+ .bss           0x00000000        0x0 vl53l0x.o
+ .text.vl53l0x_stop_continuous
+                0x00000000       0x68 vl53l0x.o
+ .text.vl53l0x_read_range_single
+                0x00000000       0xf0 vl53l0x.o
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+ .text          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+ .data          0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+ .bss           0x00000000        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+flash            0x08000000         0x00010000
+ram              0x20000000         0x00002000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD main.o
+LOAD startup.o
+LOAD robot_auto_mode.o
+LOAD collision_detector.o
+LOAD vl53l0x.o
+LOAD /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a
+
+.text           0x08000000     0x28f0
+ *(.vectors)
+ .vectors       0x08000000       0xb8 startup.o
+                0x08000000                Vectors
+ *(.after_vectors*)
+ .after_vectors
+                0x080000b8       0x80 startup.o
+                0x080000b8                ResetInit
+ *(.text*)
+ .text.uart_puts
+                0x08000138       0x24 main.o
+ .text.uart_print_int
+                0x0800015c       0xa0 main.o
+ .text.motors_stop
+                0x080001fc       0x38 main.o
+ .text.delayms  0x08000234       0x34 main.o
+                0x08000234                delayms
+ .text.TIM2_Handler
+                0x08000268       0xc0 main.o
+                0x08000268                TIM2_Handler
+ .text.hbridge_motor_apply
+                0x08000328       0x74 main.o
+                0x08000328                hbridge_motor_apply
+ .text.swap_paths
+                0x0800039c       0xac main.o
+                0x0800039c                swap_paths
+ .text.startup.main
+                0x08000448      0xb10 main.o
+                0x08000448                main
+ .text.Default_Handler
+                0x08000f58        0x4 startup.o
+                0x08000f58                ADC_COMP_Handler
+                0x08000f58                EXTI2_3_Handler
+                0x08000f58                TIM21_Handler
+                0x08000f58                SysTick_Handler
+                0x08000f58                I2C1_Handler
+                0x08000f58                PendSV_Handler
+                0x08000f58                NMI_Handler
+                0x08000f58                WWDG_Handler
+                0x08000f58                RTC_Handler
+                0x08000f58                EXTI4_15_Handler
+                0x08000f58                USART1_Handler
+                0x08000f58                DMA_CH4_5_6_7_Handler
+                0x08000f58                Default_Handler
+                0x08000f58                LPUART1_Handler
+                0x08000f58                EXTI0_1_Handler
+                0x08000f58                DMA_CH1_Handler
+                0x08000f58                SPI2_Handler
+                0x08000f58                DMA_CH2_3_Handler
+                0x08000f58                I2C2_Handler
+                0x08000f58                SVC_Handler
+                0x08000f58                LPTIM1_Handler
+                0x08000f58                USART2_Handler
+                0x08000f58                SPI1_Handler
+                0x08000f58                RCC_Handler
+                0x08000f58                PVD_Handler
+                0x08000f58                TIM22_Handler
+                0x08000f58                TIM6_Handler
+                0x08000f58                FLASH_Handler
+ .text.Hard_Fault_Handler
+                0x08000f5c        0x4 startup.o
+                0x08000f5c                Hard_Fault_Handler
+ .text.initClock
+                0x08000f60       0xbc startup.o
+                0x08000f60                initClock
+ .text.update_sensor_channel.constprop.0
+                0x0800101c       0xac robot_auto_mode.o
+ .text.run_follow_controller.isra.0
+                0x080010c8       0x34 robot_auto_mode.o
+ .text.field_sensor_reset
+                0x080010fc       0x24 robot_auto_mode.o
+                0x080010fc                field_sensor_reset
+ .text.field_sensor_update
+                0x08001120       0x78 robot_auto_mode.o
+                0x08001120                field_sensor_update
+ .text.robot_auto_mode_init
+                0x08001198       0x1c robot_auto_mode.o
+                0x08001198                robot_auto_mode_init
+ .text.robot_auto_mode_step
+                0x080011b4      0x14c robot_auto_mode.o
+                0x080011b4                robot_auto_mode_step
+ .text.i2c_write_addr8_data8
+                0x08001300       0x98 collision_detector.o
+                0x08001300                i2c_write_addr8_data8
+ .text.i2c_read_addr8_data8
+                0x08001398       0xd0 collision_detector.o
+                0x08001398                i2c_read_addr8_data8
+ .text.i2c_read_addr8_data16
+                0x08001468       0xf8 collision_detector.o
+                0x08001468                i2c_read_addr8_data16
+ .text.collision_detector_init
+                0x08001560      0x100 collision_detector.o
+                0x08001560                collision_detector_init
+ .text.collision_detector_update
+                0x08001660       0x50 collision_detector.o
+                0x08001660                collision_detector_update
+ .text.perform_single_ref_calibration
+                0x080016b0       0x68 vl53l0x.o
+ .text.vl53l0x_init
+                0x08001718      0x578 vl53l0x.o
+                0x08001718                vl53l0x_init
+ .text.vl53l0x_start_continuous
+                0x08001c90       0x68 vl53l0x.o
+                0x08001c90                vl53l0x_start_continuous
+ .text.vl53l0x_measurement_ready
+                0x08001cf8       0x28 vl53l0x.o
+                0x08001cf8                vl53l0x_measurement_ready
+ .text.vl53l0x_read_range_continuous
+                0x08001d20       0x3c vl53l0x.o
+                0x08001d20                vl53l0x_read_range_continuous
+ .text          0x08001d5c      0x114 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                0x08001d5c                __udivsi3
+                0x08001d5c                __aeabi_uidiv
+                0x08001e68                __aeabi_uidivmod
+ .text          0x08001e70      0x1d4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                0x08001e70                __aeabi_idiv
+                0x08001e70                __divsi3
+                0x0800203c                __aeabi_idivmod
+ .text          0x08002044        0x4 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                0x08002044                __aeabi_ldiv0
+                0x08002044                __aeabi_idiv0
+ .text          0x08002048       0x74 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+                0x08002048                __aeabi_cfrcmple
+                0x08002050                __aeabi_cfcmple
+                0x08002050                __aeabi_cfcmpeq
+                0x08002060                __aeabi_fcmpeq
+                0x0800206c                __aeabi_fcmplt
+                0x08002080                __aeabi_fcmple
+                0x08002094                __aeabi_fcmpgt
+                0x080020a8                __aeabi_fcmpge
+ .text.__eqsf2  0x080020bc       0x58 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+                0x080020bc                __nesf2
+                0x080020bc                __eqsf2
+ .text.__gesf2  0x08002114       0xa0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+                0x08002114                __gtsf2
+                0x08002114                __gesf2
+ .text.__lesf2  0x080021b4       0xa0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+                0x080021b4                __lesf2
+                0x080021b4                __ltsf2
+ .text.__aeabi_fsub
+                0x08002254      0x494 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+                0x08002254                __aeabi_fsub
+ .text.__aeabi_f2iz
+                0x080026e8       0x40 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+                0x080026e8                __aeabi_f2iz
+ .text.__aeabi_i2f
+                0x08002728       0x90 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+                0x08002728                __aeabi_i2f
+ .text          0x080027b8       0x3c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+                0x080027b8                __clzsi2
+ *(.rodata*)
+ .rodata.main.str1.4
+                0x080027f4       0xe3 main.o
+ *fill*         0x080028d7        0x1 
+ .rodata.k_path_table
+                0x080028d8       0x18 robot_auto_mode.o
+                0x080028f0                        . = ALIGN (0x4)
+                0x080028f0                        PROVIDE (__init_array_start = .)
+ *(SORT_BY_NAME(.init_array.*))
+ *(.init_array)
+                0x080028f0                        PROVIDE (__init_array_end = .)
+                0x080028f0                        . = ALIGN (0x4)
+                0x080028f0                        _etext = .
+
+.glue_7         0x080028f0        0x0
+ .glue_7        0x080028f0        0x0 linker stubs
+
+.glue_7t        0x080028f0        0x0
+ .glue_7t       0x080028f0        0x0 linker stubs
+
+.vfp11_veneer   0x080028f0        0x0
+ .vfp11_veneer  0x080028f0        0x0 linker stubs
+
+.v4_bx          0x080028f0        0x0
+ .v4_bx         0x080028f0        0x0 linker stubs
+
+.iplt           0x080028f0        0x0
+ .iplt          0x080028f0        0x0 main.o
+
+.rel.dyn        0x080028f0        0x0
+ .rel.iplt      0x080028f0        0x0 main.o
+
+.data           0x20000000        0x4 load address 0x080028f0
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _data = .
+ *(.data*)
+ .data.g_state  0x20000000        0x1 robot_auto_mode.o
+                0x20000004                        . = ALIGN (0x4)
+ *fill*         0x20000001        0x3 
+                0x20000004                        _edata = .
+
+.igot.plt       0x20000004        0x0 load address 0x080028f4
+ .igot.plt      0x20000004        0x0 main.o
+
+.bss            0x20000004       0x18 load address 0x080028f4
+                0x20000004                        _bss = .
+ *(.bss*)
+ .bss.g_pwm_counter
+                0x20000004        0x4 main.o
+ .bss.g_motor_compare
+                0x20000008       0x10 main.o
+ .bss.g_active_action
+                0x20000018        0x1 robot_auto_mode.o
+ .bss.stop_variable
+                0x20000019        0x1 vl53l0x.o
+ *(COMMON)
+                0x2000001c                        . = ALIGN (0x4)
+ *fill*         0x2000001a        0x2 
+                0x2000001c                        _ebss = .
+                [!provide]                        PROVIDE (end = .)
+                [!provide]                        PROVIDE (_HeapStart = .)
+                0x20002000                        PROVIDE (_StackTop = (ORIGIN (ram) + LENGTH (ram)))
+OUTPUT(auto_mode.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000     0x4d94
+ .debug_info    0x00000000     0x1d1f main.o
+ .debug_info    0x00001d1f      0x369 startup.o
+ .debug_info    0x00002088     0x1168 robot_auto_mode.o
+ .debug_info    0x000031f0      0xa1b collision_detector.o
+ .debug_info    0x00003c0b     0x1189 vl53l0x.o
+
+.debug_abbrev   0x00000000      0xfd3
+ .debug_abbrev  0x00000000      0x572 main.o
+ .debug_abbrev  0x00000572      0x184 startup.o
+ .debug_abbrev  0x000006f6      0x37a robot_auto_mode.o
+ .debug_abbrev  0x00000a70      0x307 collision_detector.o
+ .debug_abbrev  0x00000d77      0x25c vl53l0x.o
+
+.debug_loclists
+                0x00000000     0x27b5
+ .debug_loclists
+                0x00000000     0x1784 main.o
+ .debug_loclists
+                0x00001784       0x39 startup.o
+ .debug_loclists
+                0x000017bd      0x97a robot_auto_mode.o
+ .debug_loclists
+                0x00002137      0x39c collision_detector.o
+ .debug_loclists
+                0x000024d3      0x2e2 vl53l0x.o
+
+.debug_aranges  0x00000000      0x1a0
+ .debug_aranges
+                0x00000000       0x68 main.o
+ .debug_aranges
+                0x00000068       0x38 startup.o
+ .debug_aranges
+                0x000000a0       0x68 robot_auto_mode.o
+ .debug_aranges
+                0x00000108       0x48 collision_detector.o
+ .debug_aranges
+                0x00000150       0x50 vl53l0x.o
+
+.debug_rnglists
+                0x00000000      0x8a2
+ .debug_rnglists
+                0x00000000      0x3fd main.o
+ .debug_rnglists
+                0x000003fd       0x27 startup.o
+ .debug_rnglists
+                0x00000424      0x1b5 robot_auto_mode.o
+ .debug_rnglists
+                0x000005d9      0x278 collision_detector.o
+ .debug_rnglists
+                0x00000851       0x51 vl53l0x.o
+
+.debug_line     0x00000000     0x3cab
+ .debug_line    0x00000000     0x1f46 main.o
+ .debug_line    0x00001f46      0x321 startup.o
+ .debug_line    0x00002267      0x7df robot_auto_mode.o
+ .debug_line    0x00002a46      0x9dc collision_detector.o
+ .debug_line    0x00003422      0x889 vl53l0x.o
+
+.debug_str      0x00000000     0x1047
+ .debug_str     0x00000000     0x1047 main.o
+                                0x8a5 (size before relaxing)
+ .debug_str     0x00001047        0x0 startup.o
+                                0x2e8 (size before relaxing)
+ .debug_str     0x00001047        0x0 robot_auto_mode.o
+                                0x738 (size before relaxing)
+ .debug_str     0x00001047        0x0 collision_detector.o
+                                0x4a7 (size before relaxing)
+ .debug_str     0x00001047        0x0 vl53l0x.o
+                                0x3cc (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 main.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045        0x0 startup.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045        0x0 robot_auto_mode.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045        0x0 collision_detector.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045        0x0 vl53l0x.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2c main.o
+ .ARM.attributes
+                0x0000002c       0x2c startup.o
+ .ARM.attributes
+                0x00000058       0x2c robot_auto_mode.o
+ .ARM.attributes
+                0x00000084       0x2c collision_detector.o
+ .ARM.attributes
+                0x000000b0       0x2c vl53l0x.o
+ .ARM.attributes
+                0x000000dc       0x1e /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .ARM.attributes
+                0x000000fa       0x1e /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x00000118       0x1e /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+ .ARM.attributes
+                0x00000136       0x1e /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+ .ARM.attributes
+                0x00000154       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+ .ARM.attributes
+                0x00000180       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+ .ARM.attributes
+                0x000001ac       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+ .ARM.attributes
+                0x000001d8       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+ .ARM.attributes
+                0x00000204       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+ .ARM.attributes
+                0x00000230       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+ .ARM.attributes
+                0x0000025c       0x1e /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+
+.debug_frame    0x00000000      0x524
+ .debug_frame   0x00000000      0x120 main.o
+ .debug_frame   0x00000120       0x50 startup.o
+ .debug_frame   0x00000170       0xe8 robot_auto_mode.o
+ .debug_frame   0x00000258       0xb4 collision_detector.o
+ .debug_frame   0x0000030c       0xdc vl53l0x.o
+ .debug_frame   0x000003e8       0x20 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+ .debug_frame   0x00000408       0x20 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+ .debug_frame   0x00000428       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+ .debug_frame   0x00000454       0x28 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+ .debug_frame   0x0000047c       0x28 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+ .debug_frame   0x000004a4       0x34 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+ .debug_frame   0x000004d8       0x20 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+ .debug_frame   0x000004f8       0x2c /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+
+.debug_line_str
+                0x00000000       0xde
+ .debug_line_str
+                0x00000000       0xde /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                                 0xd2 (size before relaxing)
+ .debug_line_str
+                0x000000de        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                                 0xd2 (size before relaxing)
+ .debug_line_str
+                0x000000de        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                                 0xd2 (size before relaxing)
+ .debug_line_str
+                0x000000de        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+                                 0xd2 (size before relaxing)
+ .debug_line_str
+                0x000000de        0x0 /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+                                 0xd2 (size before relaxing)
+
+Cross Reference Table
+
+Symbol                                            File
+ADC_COMP_Handler                                  startup.o
+DMA_CH1_Handler                                   startup.o
+DMA_CH2_3_Handler                                 startup.o
+DMA_CH4_5_6_7_Handler                             startup.o
+Default_Handler                                   startup.o
+EXTI0_1_Handler                                   startup.o
+EXTI2_3_Handler                                   startup.o
+EXTI4_15_Handler                                  startup.o
+FLASH_Handler                                     startup.o
+Hard_Fault_Handler                                startup.o
+I2C1_Handler                                      startup.o
+I2C2_Handler                                      startup.o
+LPTIM1_Handler                                    startup.o
+LPUART1_Handler                                   startup.o
+NMI_Handler                                       startup.o
+PVD_Handler                                       startup.o
+PendSV_Handler                                    startup.o
+RCC_Handler                                       startup.o
+RTC_Handler                                       startup.o
+ResetInit                                         startup.o
+SPI1_Handler                                      startup.o
+SPI2_Handler                                      startup.o
+SVC_Handler                                       startup.o
+SysTick_Handler                                   startup.o
+TIM21_Handler                                     startup.o
+TIM22_Handler                                     startup.o
+TIM2_Handler                                      main.o
+TIM6_Handler                                      startup.o
+USART1_Handler                                    startup.o
+USART2_Handler                                    startup.o
+Vectors                                           startup.o
+WWDG_Handler                                      startup.o
+_StackTop                                         startup.o
+__aeabi_cfcmpeq                                   /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_cfcmple                                   /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_cfrcmple                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_f2iz                                      /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(fixsfsi.o)
+                                                  main.o
+__aeabi_fcmpeq                                    /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_fcmpge                                    /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+                                                  main.o
+__aeabi_fcmpgt                                    /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_fcmple                                    /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+                                                  main.o
+__aeabi_fcmplt                                    /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__aeabi_fsub                                      /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+                                                  main.o
+__aeabi_i2f                                       /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+                                                  main.o
+__aeabi_idiv                                      /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                                                  robot_auto_mode.o
+                                                  main.o
+__aeabi_idiv0                                     /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+__aeabi_idivmod                                   /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+                                                  main.o
+__aeabi_ldiv0                                     /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_dvmd_tls.o)
+__aeabi_uidiv                                     /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                                                  main.o
+__aeabi_uidivmod                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+                                                  main.o
+__clzsi2                                          /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_clzsi2.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(floatsisf.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(subsf3.o)
+__divsi3                                          /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_divsi3.o)
+__eqsf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__gesf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__gtsf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(gesf2.o)
+__init_array_end                                  startup.o
+__init_array_start                                startup.o
+__lesf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+                                                  /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_arm_cmpsf2.o)
+__ltsf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(lesf2.o)
+__nesf2                                           /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(eqsf2.o)
+__udivsi3                                         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/libgcc.a(_udivsi3.o)
+_data                                             startup.o
+_ebss                                             startup.o
+_edata                                            startup.o
+_etext                                            startup.o
+collision_detector_init                           collision_detector.o
+                                                  main.o
+collision_detector_reset                          collision_detector.o
+collision_detector_update                         collision_detector.o
+                                                  main.o
+delayms                                           main.o
+                                                  collision_detector.o
+                                                  robot_auto_mode.o
+field_sensor_reset                                robot_auto_mode.o
+                                                  main.o
+field_sensor_update                               robot_auto_mode.o
+                                                  main.o
+hbridge_motor_apply                               main.o
+                                                  robot_auto_mode.o
+i2c_read_addr8_data16                             collision_detector.o
+                                                  vl53l0x.o
+i2c_read_addr8_data8                              collision_detector.o
+                                                  vl53l0x.o
+i2c_write_addr8_data8                             collision_detector.o
+                                                  vl53l0x.o
+initClock                                         startup.o
+main                                              main.o
+                                                  startup.o
+path_context_on_intersection                      robot_auto_mode.o
+path_context_reset                                robot_auto_mode.o
+robot_auto_mode_get_state                         robot_auto_mode.o
+robot_auto_mode_init                              robot_auto_mode.o
+                                                  main.o
+robot_auto_mode_set_path                          robot_auto_mode.o
+robot_auto_mode_step                              robot_auto_mode.o
+                                                  main.o
+swap_paths                                        main.o
+vl53l0x_init                                      vl53l0x.o
+                                                  collision_detector.o
+vl53l0x_measurement_ready                         vl53l0x.o
+                                                  collision_detector.o
+vl53l0x_read_range_continuous                     vl53l0x.o
+                                                  collision_detector.o
+vl53l0x_read_range_single                         vl53l0x.o
+vl53l0x_start_continuous                          vl53l0x.o
+                                                  collision_detector.o
+vl53l0x_stop_continuous                           vl53l0x.o
+wait_1ms                                          main.o
+wait_1us                                          main.o
