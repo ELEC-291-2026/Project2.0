@@ -4,6 +4,8 @@
 
 extern void delayms(unsigned int ms);
 
+extern void speaker_beep(unsigned int frequency_hz, unsigned int duration_ms);
+
 /*
  * Auto-mode starter based on the project slides:
  *
@@ -16,6 +18,8 @@ extern void delayms(unsigned int ms);
  * Path decisions are made from the selected path and the number of distinct
  * intersections the robot has crossed.
  */
+
+extern int BASE_SPEED;
 
 static robot_state_t g_state = ROBOT_AUTO_FOLLOW;
 static path_action_t g_active_action = PATH_STRAIGHT;
@@ -32,8 +36,8 @@ static const path_action_t k_path_table[3][8] =
 
 enum
 {
-    BASE_SPEED = 600,           /* forward drive speed (out of MAX_PWM) */
-    SLOW_SPEED = 0,             /* inner-wheel speed during a steer — full pivot */
+    //BASE_SPEED = 600,           /* forward drive speed (out of MAX_PWM) */
+    SLOW_SPEED = 0,             /* inner-wheel speed during a steer â€” full pivot */
     MAX_PWM = 1000,
     STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
     TRACK_THRESHOLD = 200,      /* raw ADC: either sensor above = wire visible */
@@ -42,7 +46,7 @@ enum
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
     STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 620
+    TURN_SPEED = 720
 };
 
 static int mix_samples(int previous, int sample, int keep_count)
@@ -192,12 +196,12 @@ static void run_follow_controller(const field_data_t *sensors)
 
     if (diff > STEER_DEADBAND)
     {
-        /* Wire is to the left — slow right wheel to steer left */
+        /* Wire is to the left â€” slow right wheel to steer left */
         motor_set_signed(SLOW_SPEED, BASE_SPEED);
     }
     else if (diff < -STEER_DEADBAND)
     {
-        /* Wire is to the right — slow left wheel to steer right */
+        /* Wire is to the right â€” slow left wheel to steer right */
         motor_set_signed(BASE_SPEED, SLOW_SPEED);
     }
     else
@@ -215,7 +219,7 @@ static void run_path_action(path_action_t action)
             break;
 
         case PATH_RIGHT:
-            motor_set_signed(TURN_SPEED, -TURN_SPEED);
+            motor_set_signed(TURN_SPEED+40, -(TURN_SPEED+40));
             break;
 
         case PATH_STOP:
@@ -339,6 +343,10 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             {
                 g_active_action = path_context_on_intersection(context);
                 motor_stop();
+                
+				// --- SPEAKER PIP (PB5 / PIN 24) ---
+				speaker_beep(1000, 200);  // 1 kHz tone for 200 ms
+                
                 delayms(400);
                 if (g_active_action == PATH_LEFT || g_active_action == PATH_RIGHT)
                 {
@@ -382,7 +390,7 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             break;
 
         case ROBOT_AUTO_LOST:
-            /* Keep steering — never stop while searching for the wire */
+            /* Keep steering â€” never stop while searching for the wire */
             run_follow_controller(sensors);
             if (sensors->left_raw > TRACK_THRESHOLD ||
                 sensors->right_raw > TRACK_THRESHOLD)
