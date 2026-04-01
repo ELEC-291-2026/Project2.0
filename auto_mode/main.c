@@ -1,6 +1,8 @@
 #include "stm32l051xx.h"
 #include "robot_auto_mode.h"
 #include "collision_detector.h"
+#include "../vl53l0x.h"
+#include <stdio.h>
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
@@ -127,7 +129,6 @@ static void clock_init(void)
 static void uart_init(void)
 {
     RCC->IOPENR |= (1U << 0U);
-    RCC->IOPENR |= (1U << 1U);
     RCC->APB2ENR |= (1U << 14U);
 
     GPIOA->MODER &= ~(3U << 18U);
@@ -337,6 +338,41 @@ static void motors_set(int left, int right)
     }
 }
 
+static void set_motor_outputs(int left_command, int right_command)
+{
+    if (left_command > 0)
+    {
+        g_motor_compare[0] = command_to_compare(left_command);
+        g_motor_compare[1] = 0U;
+    }
+    else if (left_command < 0)
+    {
+        g_motor_compare[0] = 0U;
+        g_motor_compare[1] = command_to_compare(left_command);
+    }
+    else
+    {
+        g_motor_compare[0] = 0U;
+        g_motor_compare[1] = 0U;
+    }
+
+    if (right_command > 0)
+    {
+        g_motor_compare[2] = command_to_compare(right_command);
+        g_motor_compare[3] = 0U;
+    }
+    else if (right_command < 0)
+    {
+        g_motor_compare[2] = 0U;
+        g_motor_compare[3] = command_to_compare(right_command);
+    }
+    else
+    {
+        g_motor_compare[2] = 0U;
+        g_motor_compare[3] = 0U;
+    }
+}
+
 void TIM2_Handler(void)
 {
     TIM2->SR &= ~TIM_SR_UIF;
@@ -482,7 +518,7 @@ static void control(int x, int y)
 	int left = (scaled_y+scaled_x);
 	int right = (scaled_y-scaled_x);
 	
-	motors_set(left, right);
+	set_motor_outputs(left, right);
 }
 
 /* Bridge called by robot_auto_mode.c to drive the physical motors. */
@@ -497,6 +533,8 @@ void main(void)
     path_context_t context;
     collision_detector_t collision;
     int tof_ok;
+    unsigned int tof_poll_counter;
+    int obstacle_detected;
     unsigned int i;
     unsigned int loop;
     
@@ -516,6 +554,8 @@ void main(void)
 
     robot_auto_mode_init(&context, PATH_ID_1);
     tof_ok = collision_detector_init(&collision);
+    tof_poll_counter = 0U;
+    obstacle_detected = 0;
 
     delayms(500U);
     uart_puts("Robot starting up...\r\n");
@@ -566,6 +606,7 @@ void main(void)
 	            counterMS++;
 	            wait_1us();
 	        }
+	        
 	        if(counterMS <= 2000) 
 	        {
 	        	goto end;
@@ -623,20 +664,24 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 
-	    	end:;
+            if(auto_mode == 0)
+            {
+                control(translated_v[0],translated_v[1]);
+            }
+	    	printf("Time: %6d us, x: %5d, y: %5d, Automode: %d\n\r", counterMS, (int)translated_v[0], (int)translated_v[1], auto_mode);
 	    	
+	    	end:;
 	    }
- 
-	    if (auto_mode == 1)
-        {
-            field_sensor_update(&sensors,
-	            adc_read(ADC_CH_LEFT),
-	            adc_read(ADC_CH_RIGHT),
-	            adc_read(ADC_CH_INTERSECT));
+        
+        if(auto_mode == 1){
+        field_sensor_update(&sensors,
+            adc_read(ADC_CH_LEFT),
+            adc_read(ADC_CH_RIGHT),
+            adc_read(ADC_CH_INTERSECT));
 
             if ((loop % 5U) == 0U)
             {
-                uart_puts("mode=AUTO | L r=");
+                uart_puts("L r=");
                 uart_print_int(sensors.left_raw, 4);
                 uart_puts(" s=");
                 uart_print_int(sensors.left_signal, 4);
@@ -661,42 +706,30 @@ void main(void)
                 uart_puts("\r\n");
             }
         }
-        else if ((loop % 5U) == 0U)
+
+        ++loop;
+
+        /* Poll VL53L0X every 500ms â€” stop motors while obstacle within 200mm */
+        ++tof_poll_counter;
+        if (tof_ok && tof_poll_counter >= 50U)
         {
-            uart_puts("mode=REMOTE | x=");
-            uart_print_int((int)translated_v[0], 4);
-            uart_puts(" y=");
-            uart_print_int((int)translated_v[1], 4);
-            uart_puts(" | dir=");
-            uart_puts(movement_name(g_last_left_command, g_last_right_command));
-            uart_puts(" lc=");
-            uart_print_int(g_last_left_command, 4);
-            uart_puts(" rc=");
-            uart_print_int(g_last_right_command, 4);
-            uart_puts("\r\n");
-        }
-
-	        ++loop;
-
-        /* Refresh the cached obstacle state without stalling the control loop. */
-        if (tof_ok)
-        {
-            collision_detector_update(&collision);
-        }
-
-	        if (tof_ok && collision.obstacle_detected)
-	        {
-	            motors_stop();
-	        }
-	        else if (auto_mode == 1)
-	        {
-	            robot_auto_mode_step(&sensors, &context);
-	        }
-            else
+            uint16_t dist_mm;
+            tof_poll_counter = 0U;
+            if (vl53l0x_read_range_single(&dist_mm))
             {
-                control((int)translated_v[0], (int)translated_v[1]);
+                obstacle_detected = (dist_mm < 200U);
             }
+        }
 
-	        delayms(10U);
-	    }
+        if (obstacle_detected)
+        {
+            motors_stop();
+        }
+        else
+        {
+            robot_auto_mode_step(&sensors, &context);
+        }
+
+        delayms(10U);
+    }
 }
