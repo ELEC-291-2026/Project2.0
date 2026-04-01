@@ -710,7 +710,7 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 
-	        if (auto_mode == 0)
+	        if (auto_mode == 0 && !(tof_ok && collision.obstacle_detected))
 	        {
 	            control((int)translated_v[0], (int)translated_v[1]);
 	        }
