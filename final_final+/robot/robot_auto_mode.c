@@ -2,6 +2,8 @@
 #include "../header_files/field_sensor_adc_config.h"
 #include "../header_files/hbridge_motor.h"
 
+extern void delayms(unsigned int ms);
+
 /*
  * Auto-mode starter based on the project slides:
  *

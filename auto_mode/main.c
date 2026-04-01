@@ -1,7 +1,6 @@
 #include "stm32l051xx.h"
 #include "robot_auto_mode.h"
 #include "collision_detector.h"
-#include "../vl53l0x.h"
 
 #define ADC_CH_LEFT         5
 #define ADC_CH_RIGHT        4
@@ -498,11 +497,8 @@ void main(void)
     path_context_t context;
     collision_detector_t collision;
     int tof_ok;
-    unsigned int tof_poll_counter;
-    int obstacle_detected;
     unsigned int i;
     unsigned int loop;
-    int previous_auto_mode;
     
         
 
@@ -520,8 +516,6 @@ void main(void)
 
     robot_auto_mode_init(&context, PATH_ID_1);
     tof_ok = collision_detector_init(&collision);
-    tof_poll_counter = 0U;
-    obstacle_detected = 0;
 
     delayms(500U);
     uart_puts("Robot starting up...\r\n");
@@ -560,7 +554,6 @@ void main(void)
 	
 	// control var
 	int counterNormalize = 3;
-    previous_auto_mode = auto_mode;
     
     
     while (1)
@@ -685,19 +678,13 @@ void main(void)
 
 	        ++loop;
 
-        /* Poll VL53L0X every 500ms Ã¢â‚¬â€ stop motors while obstacle within 200mm */
-        ++tof_poll_counter;
-        if (tof_ok && tof_poll_counter >= 50U)
+        /* Refresh the cached obstacle state without stalling the control loop. */
+        if (tof_ok)
         {
-            uint16_t dist_mm;
-            tof_poll_counter = 0U;
-            if (vl53l0x_read_range_single(&dist_mm))
-            {
-                obstacle_detected = (dist_mm < 200U);
-            }
+            collision_detector_update(&collision);
         }
 
-	        if (obstacle_detected)
+	        if (tof_ok && collision.obstacle_detected)
 	        {
 	            motors_stop();
 	        }
