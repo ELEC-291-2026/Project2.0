@@ -35,6 +35,8 @@
 
 #define LED_SENSOR ((GPIOB->IDR >> 1) & 1U)
 #define LED_SENSOR_2 (GPIOB->IDR & 1U)
+#define STATUS_LED_GPIO_PORT GPIOA
+#define STATUS_LED_PIN       (1U << 8U)
 
 
 
@@ -517,14 +519,14 @@ void hbridge_motor_apply(const motor_command_t *command)
     motors_set(command->left_command, command->right_command);
 }
 
-static void led_flash(unsigned int pin_bit, unsigned int times)
+static void led_flash(unsigned int times)
 {
     unsigned int i;
     for (i = 0; i < times; i++)
     {
-        GPIOB->ODR |=  pin_bit;
+        STATUS_LED_GPIO_PORT->ODR |= STATUS_LED_PIN;
         delayms(40);
-        GPIOB->ODR &= ~pin_bit;
+        STATUS_LED_GPIO_PORT->ODR &= ~STATUS_LED_PIN;
         delayms(40);
     }
 }
@@ -535,7 +537,7 @@ void swap_paths(path_context_t *ctx)
 	ctx->intersection_count = 0;
     ctx->intersection_active = 0;
     
-    led_flash((1U<<6U), ctx->selected_path+1);
+    led_flash(ctx->selected_path + 1);
 }
 
 void main(void)
@@ -596,10 +598,10 @@ void main(void)
 	GPIOB->PUPDR &= ~((3U << 2) | (3U << 0)); // Clear bits
 	GPIOB->PUPDR |=  ((1U << 2) | (1U << 0)); // Set to 01 (Pull-up)
 	
-	    // LED on PB6
-    GPIOB->MODER &= ~(3U << 12U);   // clear bits 12-13
-    GPIOB->MODER |=  (1U << 12U);   // output mode
-    GPIOB->ODR   &= ~(1U << 6U);    // start low
+	// Status LED on PA8, leaving PB6/PB7 dedicated to the VL53L0X I2C bus
+    GPIOA->MODER &= ~(3U << 16U);
+    GPIOA->MODER |=  (1U << 16U);
+    GPIOA->ODR   &= ~STATUS_LED_PIN;
 
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
