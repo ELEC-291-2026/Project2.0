@@ -268,11 +268,6 @@ int collision_detector_init(collision_detector_t *detector)
         return 0;
     }
 
-    if (!vl53l0x_start_continuous())
-    {
-        return 0;
-    }
-
     detector->initialized = 1;
     return 1;
 }
