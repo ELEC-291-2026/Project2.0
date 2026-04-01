@@ -6,7 +6,7 @@
 #define ADC_CH_RIGHT        4
 #define ADC_CH_INTERSECT    6
 
-#define BASE_SPEED          300
+int BASE_SPEED = 700;
 #define TURN_SPEED          300
 #define MAX_PWM             1000
 #define KP                  2
@@ -38,6 +38,9 @@
 #define LED_SENSOR_2 (GPIOB->IDR & 1U)
 #define STATUS_LED_GPIO_PORT GPIOA
 #define STATUS_LED_PIN       (1U << 8U)
+
+#define LED1_PA15_PIN  (1U << 15U)
+#define LED2_PB3_PIN   (1U << 3U)
 
 
 
@@ -88,6 +91,20 @@ static void set_motor_pin(unsigned int bit_mask, int active)
         GPIOA->ODR &= ~bit_mask;
     }
 #endif
+}
+
+// Add these globals near your other motor globals
+static volatile unsigned int g_speaker_toggle_counts = 0;  // half-period in PWM ticks
+static volatile unsigned int g_speaker_remaining = 0;       // ticks left to beep
+static volatile unsigned int g_speaker_counter = 0;         // counts up to toggle
+
+void speaker_beep(unsigned int frequency_hz, unsigned int duration_ms)
+{
+    // TIM2 fires at SOFTWARE_PWM_TICK_HZ (100,000 Hz)
+    // half-period = ticks per half cycle = 100000 / (2 * freq)
+    g_speaker_counter = 0;
+    g_speaker_remaining = (SOFTWARE_PWM_TICK_HZ * duration_ms) / 1000U;
+    g_speaker_toggle_counts = SOFTWARE_PWM_TICK_HZ / (2U * frequency_hz);
 }
 
 void wait_1us(void)
@@ -251,6 +268,11 @@ static void pwm_init(void)
         GPIO_PUPDR_PUPD1 |
         GPIO_PUPDR_PUPD2 |
         GPIO_PUPDR_PUPD3);
+        
+        
+     
+	
+	
 #if MOTOR_OUTPUT_ACTIVE_LOW
     GPIOA->ODR |= BIT0 | BIT1 | BIT2 | BIT3;
 #else
@@ -368,10 +390,25 @@ void TIM2_Handler(void)
     set_motor_pin(BIT3, g_motor_compare[3] > g_pwm_counter);
 
     ++g_pwm_counter;
-
     if (g_pwm_counter >= PWM_PERIOD_COUNTS)
     {
         g_pwm_counter = 0U;
+    }
+
+    // Speaker tone generation
+    if (g_speaker_remaining > 0U)
+    {
+        ++g_speaker_counter;
+        if (g_speaker_counter >= g_speaker_toggle_counts)
+        {
+            GPIOA->ODR ^= (1U << 14); 
+            g_speaker_counter = 0U;
+        }
+        --g_speaker_remaining;
+    }
+    else
+    {
+        GPIOA->ODR &= ~(1U << 14);
     }
 }
 
@@ -585,6 +622,9 @@ void main(void)
         delayms(100U);
     }
     
+    
+    // Enable Clock for GPIOA (already done in pwm_init, but safe to keep)
+	RCC->IOPENR |= (1U << 0U);
 	// Enable GPIOB Clock 
 	RCC->IOPENR |= (1U << 1U); 
 	
@@ -601,11 +641,28 @@ void main(void)
     GPIOA->MODER &= ~(3U << 16U);
     GPIOA->MODER |=  (1U << 16U);
     GPIOA->ODR   &= ~STATUS_LED_PIN;
+    
+	// Set PA15 to Output Mode (01)
+	GPIOA->MODER &= ~(3U << 30U); // Clear bits 30-31
+	GPIOA->MODER |=  (1U << 30U); // Set bit 30 for Output
+	GPIOA->ODR   &= ~LED1_PA15_PIN; // Start with LED off
+	
+	// Set PB3 to Output Mode (01)
+	GPIOB->MODER &= ~(3U << 6U);  // Clear bits 6-7
+	GPIOB->MODER |=  (1U << 6U);  // Set bit 6 for Output
+	GPIOB->ODR   &= ~LED2_PB3_PIN;  // Start with LED off
 
 	//Led on PB4
     GPIOB->MODER &= ~(3U << 8U);   // clear bits 8-9 (PB4)
     GPIOB->MODER |=  (1U << 8U);   // output mode for PB4
     GPIOB->ODR   &= ~(1U << 4U);   // start low
+	
+	//SPEAKER
+	GPIOA->MODER &= ~(3U << 28U); // Clear bits 28 and 29
+	GPIOA->MODER |=  (1U << 28U); // Set bit 28 (Output Mode)
+	
+	// Optional: Set Speed to Medium/High for a cleaner square wave
+	GPIOA->OSPEEDR |= (2U << 28U);
 
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
@@ -620,15 +677,17 @@ void main(void)
 
     uart_puts("Warmup done. Entering main loop.\r\n");
 
-    int auto_mode = 1;
+    int auto_mode = 0;
     int counterMS = 0;
 	float normalized[2] = {0,0};
 	float translated_v[2] = {0,0};
 	int auto_counter = 0;
+	int auto_stop_flag = 0;
+	int collision_counter = 0;
+	int backwards_beep = 0;
 	
 	// control var
 	int counterNormalize = 6;
-    
     
     while (1)
     {
@@ -647,24 +706,23 @@ void main(void)
 	        
 	        TIM22->CR1 &= ~TIM_CR1_CEN; // Stop TIM22
 	        counterMS = TIM22->CNT;     // Capture the EXACT microsecond count
-
 		
 	        if(counterMS <= 2000) 
 	        {
 	        	goto end;
 	        }
-	        else if(counterMS <= 7000)
+	        else if(counterMS <= 8000)
 	        {
 	        	translated_v[0] = counterMS - normalized[0];
 	        	
 	        	
-	        	if(translated_v[0] >=1100 || translated_v[0] <= -1100)
+	        	if(translated_v[0] >=1200 || translated_v[0] <= -1200)
 	        		translated_v[0] = 0;
-	        	if(translated_v[0] >=950)
+	        	else if(translated_v[0] >=9070)
 	        		translated_v[0] = 1000;
-	        	else if(translated_v[0] <= -950)
+	        	else if(translated_v[0] <= -900)
 	        		translated_v[0] = -1000;
-	        	else if(translated_v[0] <= 80 && translated_v[0] >= -80)
+	        	else if(translated_v[0] <= 150 && translated_v[0] >= -150)
 	        		translated_v[0] = 0;
 	        		
 	        }
@@ -673,36 +731,68 @@ void main(void)
 	        	translated_v[1] = counterMS - normalized[1];
 	        	
 	        	
-	        	if(translated_v[1] >=1100 || translated_v[1] <= -1100)
+	        	if(translated_v[1] >=1200 || translated_v[1] <= -1200)
 	        		translated_v[1] = 0;
-	        	else if(translated_v[1] >=950)
+	        	else if(translated_v[1] >=900)
 	        		translated_v[1] = 1000;
-	        	else if(translated_v[1] <= -950)
+	        	else if(translated_v[1] <= -900)
 	        		translated_v[1] = -1000;
-	        	else if(translated_v[1] <= 80 && translated_v[1] >= -80)
+	        	else if(translated_v[1] <= 150 && translated_v[1] >= -150)
 	        		translated_v[1] = 0;
 	        		
 	        	
 	        }
 	        
-	        else if(counterMS <=  31000)
+	        else if(counterMS <=  23000)
 	    	{
 	    		counterNormalize = 3;
-	    		delayms(100);
+				speaker_beep(1000, 200);
 	    	}
 	    	
-	    	else if(counterMS <=  37000)
+	    	else if(counterMS <=  27500)
 	    	{
-	    		auto_mode = 1;
-	    		delayms(100);
+	    		
+	    		auto_mode = !auto_mode;
+	    		if(auto_mode)
+	    			led_flash((1U<<4U), 1);
+	    		else 
+	    			counterNormalize = 3;
+	    		speaker_beep(1000, 200);
 	    	}
-	    	else if(counterMS <=  44000)
+	    	else if(counterMS <= 32000)
 	    	{
-	    		auto_mode = 0;
-	    		delayms(100);
+	    		if(auto_mode)
+                	swap_paths(&context);
+                else if(!auto_mode)
+	    		{
+		    		speaker_beep(500, 200);
+		    		delayms(100);
+		    		speaker_beep(1000, 300);
+		    		delayms(100);
+		    		speaker_beep(500, 300);
+		    	}
+            }
+	    	else if(counterMS <=  38000)
+	    	{
+	    		auto_stop_flag = !auto_stop_flag;
 	    	}
-	    	else if(counterMS <= 52000){
-                swap_paths(&context);
+			else if(counterMS <= 45000)
+			{
+				if(auto_mode)
+				{
+					if(BASE_SPEED < 999)
+						BASE_SPEED += 50;
+				}
+                speaker_beep(1000, 200);
+            }
+			else if(counterMS <= 51000)
+			{
+				if(auto_mode)
+				{
+					if(BASE_SPEED > 500)
+						BASE_SPEED -= 50;
+				}
+                speaker_beep(1000, 200);
             }
 	        
 	        if(counterNormalize > 0)
@@ -714,15 +804,6 @@ void main(void)
 					normalized[1] = counterMS;
 	    	}
 
-	        if (auto_mode == 0)
-	        {
-	        	int cx = (int)translated_v[0];
-	        	int cy = (int)translated_v[1];
-	        	if (tof_ok && collision.obstacle_detected && cy > 0)
-	        		cy = 0;
-	            control(cx, cy);
-	        }
-	        
 			uart_puts("\n\r x: ");
 	        uart_print_int((int)translated_v[0], 5);
 	        uart_puts("   y: ");
@@ -731,6 +812,54 @@ void main(void)
 	        uart_print_int(counterMS, 7);
 	        uart_puts("   automode:");
 	        uart_print_int(auto_mode, 2);
+	        
+	        if (auto_mode == 0)
+	        {
+	        	int cx = (int)translated_v[0];
+	        	int cy = (int)translated_v[1];
+	        	if (tof_ok && collision.obstacle_detected && cy > 0)
+	        	{
+	        		cy = 0;
+	        		
+	        		uart_puts("\n\rYESYEYSYESY");
+	        	}
+	            control(cx, cy);
+	            // turns on both LEDS
+	            GPIOA->ODR |= LED1_PA15_PIN;
+				GPIOB->ODR |= LED2_PB3_PIN;
+	            if(cy < 0)
+	            {
+	            	// turns off both LEDS
+	            	GPIOA->ODR &= ~LED1_PA15_PIN;
+					GPIOB->ODR &= ~LED2_PB3_PIN;
+	            	backwards_beep++;
+	            	if(backwards_beep >= 4)
+	            	{
+	            		speaker_beep(500, 100);
+	            		backwards_beep = 0;
+	            	}
+	            }
+	            if(cx > 0)
+	            {
+	            	// turns on right LED
+	            	GPIOB->ODR |= LED2_PB3_PIN;
+	            	// turns off left LED
+	            	GPIOA->ODR &= ~LED1_PA15_PIN;
+	            }
+	            else if(cx < 0)
+	            {
+	            	// turns on left LED
+	            	GPIOA->ODR |= LED1_PA15_PIN;
+	            	// turns off right LED
+	            	
+GPIOB->ODR &= ~LED2_PB3_PIN;
+	            }
+	            
+	            
+	            
+
+	        }
+	        
 	        
 	        
 	    	end:;
@@ -793,30 +922,45 @@ void main(void)
         }
 
 	    ++loop;
-
-		if (tof_ok && (auto_mode == 0 || (loop % 3000U) == 0U))
-		{
-			collision_detector_update(&collision);
-		}
 		
-        if (auto_mode == 1)
+		
+		collision_counter++;
+		if (auto_mode == 0)
         {
+			if (tof_ok && collision_counter >= 35000)
+			{
+				collision_counter = 0;
+				collision_detector_update(&collision);
+			}
+		}
+        else if (auto_mode == 1 && auto_stop_flag == 0)
+        {
+        	if (tof_ok && collision_counter >= 2000)
+			{
+				collision_counter = 0;
+				collision_detector_update(&collision);
+			}
         	if (tof_ok && collision.obstacle_detected)
         	{
         		motors_stop();
+       			
         	}
         	else
         	{
 	        	auto_counter++;
-	        	if(auto_counter >= 555)
+	        	if(auto_counter >= 175)
 	        	{
 	            	robot_auto_mode_step(&sensors, &context);
 	            	auto_counter = 0;
 	            }
 	        }
         }
+        else
+        {
+        	motors_stop();
+        }
 		
-	     //delayms(10U);
+	    
 	        
 	    
 	}
