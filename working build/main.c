@@ -521,25 +521,26 @@ void hbridge_motor_apply(const motor_command_t *command)
     motors_set(command->left_command, command->right_command);
 }
 
-static void led_flash(unsigned int times)
+static void led_flash(unsigned int pin_bit, unsigned int times)
 {
     unsigned int i;
     for (i = 0; i < times; i++)
     {
-        STATUS_LED_GPIO_PORT->ODR |= STATUS_LED_PIN;
+        GPIOB->ODR |=  pin_bit;
         delayms(40);
-        STATUS_LED_GPIO_PORT->ODR &= ~STATUS_LED_PIN;
+        GPIOB->ODR &= ~pin_bit;
         delayms(40);
     }
 }
+
 
 void swap_paths(path_context_t *ctx)
 {
 	ctx->selected_path = (path_id_t)((ctx->selected_path + 1) % 3);
 	ctx->intersection_count = 0;
     ctx->intersection_active = 0;
-    
-    led_flash(ctx->selected_path + 1);
+
+    led_flash((1U<<4U), ctx->selected_path+1);
 }
 
 void main(void)
@@ -550,10 +551,6 @@ void main(void)
     int tof_ok;
     unsigned int i;
     unsigned int loop;
-    
-
-    
-        
 
     field_sensor_reset(&sensors);
 
@@ -604,6 +601,11 @@ void main(void)
     GPIOA->MODER &= ~(3U << 16U);
     GPIOA->MODER |=  (1U << 16U);
     GPIOA->ODR   &= ~STATUS_LED_PIN;
+
+	//Led on PB4
+    GPIOB->MODER &= ~(3U << 8U);   // clear bits 8-9 (PB4)
+    GPIOB->MODER |=  (1U << 8U);   // output mode for PB4
+    GPIOB->ODR   &= ~(1U << 4U);   // start low
 
     uart_puts("--- END DUMP, starting warmup ---\r\n");
 
