@@ -37,7 +37,7 @@ static const path_action_t k_path_table[3][8] =
 enum
 {
     //BASE_SPEED = 600,           /* forward drive speed (out of MAX_PWM) */
-    SLOW_SPEED = 0,             /* inner-wheel speed during a steer â€” full pivot */
+    SLOW_SPEED = 0,             /* inner-wheel speed during a steer — full pivot */
     MAX_PWM = 1000,
     STEER_DEADBAND = 80,        /* raw ADC diff: below this = go straight */
     TRACK_THRESHOLD = 200,      /* raw ADC: either sensor above = wire visible */
@@ -46,7 +46,7 @@ enum
     BASELINE_IDLE_KEEP_COUNT = 15,
     BASELINE_STARTUP_KEEP_COUNT = 7,
     STARTUP_SETTLE_SAMPLES = 16,
-    TURN_SPEED = 720
+    TURN_SPEED = 750
 };
 
 static int mix_samples(int previous, int sample, int keep_count)
@@ -196,12 +196,12 @@ static void run_follow_controller(const field_data_t *sensors)
 
     if (diff > STEER_DEADBAND)
     {
-        /* Wire is to the left â€” slow right wheel to steer left */
+        /* Wire is to the left — slow right wheel to steer left */
         motor_set_signed(SLOW_SPEED, BASE_SPEED);
     }
     else if (diff < -STEER_DEADBAND)
     {
-        /* Wire is to the right â€” slow left wheel to steer right */
+        /* Wire is to the right — slow left wheel to steer right */
         motor_set_signed(BASE_SPEED, SLOW_SPEED);
     }
     else
@@ -390,7 +390,7 @@ void robot_auto_mode_step(field_data_t *sensors, path_context_t *context)
             break;
 
         case ROBOT_AUTO_LOST:
-            /* Keep steering â€” never stop while searching for the wire */
+            /* Keep steering — never stop while searching for the wire */
             run_follow_controller(sensors);
             if (sensors->left_raw > TRACK_THRESHOLD ||
                 sensors->right_raw > TRACK_THRESHOLD)

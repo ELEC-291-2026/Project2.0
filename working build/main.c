@@ -718,7 +718,7 @@ void main(void)
 	        	
 	        	if(translated_v[0] >=1200 || translated_v[0] <= -1200)
 	        		translated_v[0] = 0;
-	        	else if(translated_v[0] >=9070)
+	        	else if(translated_v[0] >=900)
 	        		translated_v[0] = 1000;
 	        	else if(translated_v[0] <= -900)
 	        		translated_v[0] = -1000;
@@ -935,7 +935,7 @@ GPIOB->ODR &= ~LED2_PB3_PIN;
 		}
         else if (auto_mode == 1 && auto_stop_flag == 0)
         {
-        	if (tof_ok && collision_counter >= 2000)
+        	if (tof_ok && collision_counter >= 3000)
 			{
 				collision_counter = 0;
 				collision_detector_update(&collision);
@@ -943,12 +943,11 @@ GPIOB->ODR &= ~LED2_PB3_PIN;
         	if (tof_ok && collision.obstacle_detected)
         	{
         		motors_stop();
-       			
         	}
         	else
         	{
 	        	auto_counter++;
-	        	if(auto_counter >= 175)
+	        	if(auto_counter >= 335)
 	        	{
 	            	robot_auto_mode_step(&sensors, &context);
 	            	auto_counter = 0;
