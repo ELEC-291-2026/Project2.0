@@ -11,12 +11,14 @@
 #define SARCLK 		18000000L
 
 #define LED_SIGNAL P1_7
-#define LED_SENSOR P1_6
 #define JOYSTICK_SW P2_0
 #define BUTTON_1 P3_1
 #define BUTTON_2 P1_6
 #define BUTTON_3 P1_3
 #define BUTTON_4 P1_0
+#define BUTTON_5 P0_5
+#define BUTTON_6 P0_3
+
 
 unsigned char overflow_count;
 
@@ -322,34 +324,62 @@ void main (void)
 		if(BUTTON_1 == 0)
     	{
     		while(BUTTON_1 == 0){}
-    		buttonValue = 200;
+    		buttonValue = 150;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
+    		printf("\n\rBUTTON 1");
+    		waitms(100);
     	}
     	else if(BUTTON_2 == 0)
     	{
     		while(BUTTON_2 == 0){}
-    		buttonValue = 250;
+    		buttonValue = 180;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
+    		printf("\n\rBUTTON 2");
+    		waitms(100);
     	}
     	else if(BUTTON_3 == 0)
     	{
     		while(BUTTON_3 == 0){}
-    		buttonValue = 300;
+    		buttonValue = 220;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
+    		printf("\n\rBUTTON 3");
+    		waitms(100);
     	}
 		else if(BUTTON_4 == 0)
     	{
     		while(BUTTON_4 == 0){}
+    		buttonValue = 260;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    		printf("\n\rBUTTON 4");
+    		waitms(100);
+    	}
+    	else if(BUTTON_5 == 0)
+    	{
+    		while(BUTTON_5 == 0){}
+    		buttonValue = 310;
+    		counterMS2 = -500;
+    		quartSecFlag = 0;
+    		overflow = 0;
+    		printf("\n\rBUTTON 5");
+    		waitms(100);
+    	}
+    	else if(BUTTON_6 == 0)
+    	{
+    		while(BUTTON_6 == 0){}
     		buttonValue = 350;
     		counterMS2 = -500;
     		quartSecFlag = 0;
     		overflow = 0;
+    		printf("\n\rBUTTON 6");
+    		waitms(150);
     	}
     	/*	
 	    if(LED_SENSOR == 0)
@@ -426,7 +456,7 @@ void main (void)
 	    	{
 				current_v[1] = Volts_at_Pin(QFP32_MUX_P2_1);
 				alternatingVolt = 0;
-				buttonValue = 100+10*current_v[1];
+				buttonValue = 70+10*current_v[1];
 			}
 			
 			
