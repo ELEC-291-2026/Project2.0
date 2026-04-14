@@ -25,44 +25,6 @@ This project involves designing, building, programming, and testing a robot that
 
 The system consists of two separate microcontroller-based units — a **robot** and a **remote controller** — that communicate wirelessly via JDY-40 radio modules. Both units must use microcontrollers from **different families** and be fully **battery powered**.
 
----
-
-## System Architecture
-
-### Robot
-```
-[4xAA Battery 6V]
-        |
-   [On/Off Switch]
-        |
-   [Power Regulation] ──── 3.3V ──── [Robot Microcontroller]
-        |                                       |
-        |                     ┌─────────────────┼──────────────────┐
-        |                     |                 |                  |
-   [6V Motor Rail]        [JDY-40]      [Field Detector x3]
-        |                  (UART)             (ADC x3)
-   [H-Bridge 1] ── [Motor L]
-   [H-Bridge 2] ── [Motor R]
-  (via Optocouplers)
-```
-
-### Remote
-```
-[9V Battery]
-      |
- [Power Regulation] ──── 3.3V/5V ──── [Remote Microcontroller]
-                                                |
-                         ┌──────────────────────┼─────────────────┐
-                         |                      |                 |
-                      [JDY-40]            [LCD Display]      [Joystick]
-                       (UART)           (6-pin parallel)      (ADC x2)
-                                               |
-                                          [Speaker]
-                                           (PWM)
-```
-
----
-
 ## Hardware Requirements
 
 - Two microcontroller systems from **different families** — choose from:
@@ -243,12 +205,6 @@ Add 1kΩ series resistors on all JDY-40 signal lines for protection.
 | 4×AA batteries | ~$5 | Brand name recommended — lower internal resistance |
 | 9V batteries (x2) | ~$5 | One for remote, one for 555 timer perimeter source |
 | Con-Tact shelf liner | ~$17 | Playing field surface — Home Depot |
-
----
-
-## Bonus Features
-
-These features go beyond the base requirements and are what push a demo score from 7.5 into the 8–10 range. All are achievable within the project timeline and all work with a standard breadboard setup. Total hardware cost for all of them is around $29, or roughly $5 per person.
 
 ---
 
